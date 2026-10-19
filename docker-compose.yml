@@ -1,0 +1,30 @@
+# docker compose up --build
+#   API:        http://localhost:8000/docs
+#   Prometheus: http://localhost:9090
+name: endpoint-classifier
+
+services:
+  api:
+    build: ./api
+    env_file: ./api/.env # API_KEY, EMBEDDING_URL, GPU_MODEL_SERVER_API_KEY
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000" # localhost only
+    volumes:
+      - predictions:/data # the prediction log survives container rebuilds
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.13.4
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  predictions:
+  prometheus-data:

@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# tests
+pytest>=9.1
+respx>=0.23           # mocks the embedding API; supports httpx only, not httpx2
+httpx2>=2.14          # used by Starlette's TestClient (plain httpx there is deprecated)

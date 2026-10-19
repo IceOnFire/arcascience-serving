@@ -1,0 +1,9 @@
+# Only app/, model/ and requirements.txt go into the image
+.venv/
+.env
+var/
+tests/
+scripts/
+**/__pycache__/
+.pytest_cache/
+*.sh

@@ -13,7 +13,7 @@ if [ ! -d .venv ]; then
     "${PYTHON:-python3}" -m venv .venv
 fi
 echo "Installing dependencies..."
-.venv/bin/pip install --quiet --disable-pip-version-check -r requirements.txt
+.venv/bin/pip install --quiet --disable-pip-version-check -r requirements-dev.txt
 
 if ! grep -Eq '^API_KEY=.+' .env 2>/dev/null || grep -q '^API_KEY=change-me$' .env; then
     ./generate_key.sh

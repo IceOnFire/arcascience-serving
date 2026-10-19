@@ -33,6 +33,23 @@ HOST=0.0.0.0 ./run.sh               # listen on all interfaces, e.g. in a VM or 
 
 Open http://localhost:8000/docs for the interactive documentation. Click **Authorize** and paste your `API_KEY` to try the endpoints from the browser.
 
+## Run with Docker
+
+With Docker installed, the API and a [Prometheus](#monitoring) server start together. Only `api/.env` is needed (run `./setup.sh` once to create it, or copy `.env.example` and fill it in):
+
+```bash
+docker compose up --build -d
+```
+
+| Service    | URL                        |
+| ---------- | -------------------------- |
+| API        | http://localhost:8000/docs |
+| Prometheus | http://localhost:9090      |
+
+Both listen on `localhost` only. If a port is taken, for example by `./run.sh` on 8000, choose others: `API_PORT=8001 PROMETHEUS_PORT=9091 docker compose up -d`. Stop with `docker compose down`; add `-v` to also delete the prediction log and the Prometheus history, which are kept in Docker volumes.
+
+The [image](api/Dockerfile) contains only the app, the model and the runtime dependencies, and runs as an unprivileged user. It installs PyTorch's CPU-only build: the default build for x86_64 Linux bundles several GB of CUDA libraries that a CPU server never uses. The image is still 1.4 GB, almost half of it PyTorch (see [limitations](#known-limitations-and-next-steps)). The keys are read from `api/.env` when the container starts and are never copied into the image.
+
 ## Configuration
 
 Settings are read from environment variables, or from `api/.env` (gitignored). There are no defaults for these three: if one is missing, the server refuses to start and names it.
@@ -134,7 +151,17 @@ The category drift is the one the test was built to show: Pharmacokinetic goes f
 
 Drift is a signal to investigate, not a measure of accuracy: only labels can measure accuracy. That's why the plan also includes having experts periodically label a sample of live predictions.
 
-**`GET /metrics`** exposes counters for [Prometheus](https://prometheus.io/): predictions per category, a confidence histogram, the review count, embedding latency and errors, and the model version. This project doesn't include a Prometheus server. Prometheus is a separate program that pulls (_scrapes_) `/metrics` every few seconds, stores the values over time and evaluates alert rules, often with Grafana for dashboards. The counters themselves are in memory and reset when this server restarts; the history lives in Prometheus.
+**`GET /metrics`** exposes counters for [Prometheus](https://prometheus.io/): predictions per category, a confidence histogram, the review count, embedding latency and errors, and the model version. Prometheus is a separate program that pulls (_scrapes_) `/metrics` every few seconds, stores the values over time and evaluates alert rules, often with Grafana for dashboards. The counters themselves are in memory and reset when this server restarts; the history lives in Prometheus.
+
+[`docker-compose.yml`](docker-compose.yml) runs a Prometheus server that scrapes the API every 15 seconds ([`prometheus/prometheus.yml`](prometheus/prometheus.yml)). In its UI at http://localhost:9090, try these queries:
+
+| Query                                                                                      | Shows                                                    |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| `predictions_total`                                                                        | Predictions per category since the API started           |
+| `sum(increase(predictions_needs_review_total[1h])) / sum(increase(predictions_total[1h]))` | Share of predictions that needed review in the last hour |
+| `histogram_quantile(0.95, rate(embedding_request_seconds_bucket[5m]))`                     | 95th percentile of embedding API latency                 |
+
+Three alert rules are defined in [`prometheus/alerts.yml`](prometheus/alerts.yml) and listed under _Alerts_: the API is unreachable, the embedding API is failing, or more than 60% of predictions need review for 15 minutes (the Part 2 test set had 39%). Prometheus evaluates them, but sending notifications (email, Slack) would need Alertmanager, which this setup doesn't include.
 
 In HTTP terms, this API is the server and Prometheus is the client that pulls from it; Prometheus is in turn a server for Grafana. The `prometheus_client` package is named after Prometheus's own terminology, where "client library" means the library embedded in the application being monitored. What [`monitoring.py`](api/app/monitoring.py) does is usually called _instrumentation_.
 
@@ -230,6 +257,8 @@ What this project deliberately leaves out, and what I would do next.
 ## Layout
 
 ```
+docker-compose.yml  API + Prometheus
+prometheus/         scrape configuration and alert rules
 api/
   app/
     main.py         app factory, endpoints, authentication, error handling
@@ -246,5 +275,7 @@ api/
   setup.sh          creates .venv, installs dependencies, creates .env with a random API_KEY
   run.sh            starts the server
   test.sh           runs the test suite
+  Dockerfile        the API image
+  requirements.txt  runtime dependencies (requirements-dev.txt adds the test tools)
   generate_key.sh   writes a new random API_KEY to .env (rotation)
 ```

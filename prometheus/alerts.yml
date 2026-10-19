@@ -1,0 +1,24 @@
+# Alert rules, visible under Alerts in the Prometheus UI. Sending notifications
+# (email, Slack...) would need Alertmanager, which this setup doesn't include.
+groups:
+  - name: endpoint-classifier
+    rules:
+      - alert: ApiDown
+        expr: up{job="endpoint-classifier"} == 0
+        for: 1m
+        annotations:
+          summary: Prometheus can't reach the API
+
+      - alert: EmbeddingApiFailing
+        expr: increase(embedding_errors_total[5m]) > 0
+        annotations:
+          summary: Predictions are failing because the embedding API is
+
+      - alert: HighReviewRate
+        # In Part 2, 39% of test predictions needed review; well above that, inputs have changed
+        expr: >
+          sum(increase(predictions_needs_review_total[1h]))
+            / sum(increase(predictions_total[1h])) > 0.6
+        for: 15m
+        annotations:
+          summary: More than 60% of predictions need human review

@@ -1,3 +1,4 @@
+import asyncio
 import secrets
 from contextlib import asynccontextmanager
 
@@ -12,6 +13,7 @@ from .config import Settings
 from .embedder import EmbeddingClient, EmbeddingError
 from .monitoring import Monitor
 from .schemas import CategoryScore, Health, Prediction, PredictRequest, PredictResponse, Stats
+from .store import PredictionLog
 
 
 @asynccontextmanager
@@ -21,7 +23,7 @@ async def lifespan(app: FastAPI):
     model = load_model(settings.model_dir)
     embedding = model.manifest["embedding"]
     app.state.model = model
-    app.state.monitor = Monitor(model.manifest, settings.stats_window)
+    app.state.monitor = Monitor(model.manifest, PredictionLog(settings.database_path), settings.stats_window)
     app.state.embedder = EmbeddingClient(
         settings.embedding_url, settings.gpu_model_server_api_key, embedding["model"],
         embedding["dimension"], settings.embed_batch_size, settings.embed_timeout, settings.embed_retries,
@@ -64,7 +66,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # A 768 -> 512 -> 128 -> 9 network on a few hundred rows takes well under a millisecond,
         # so it runs inline rather than in a thread pool
         proba = model.predict_proba(X)
-        monitor.record(proba)
+        # SQLite calls block, so they run in a worker thread, off the event loop
+        await asyncio.to_thread(monitor.record, body.texts, proba)
         threshold = model.manifest["review_threshold"]
         predictions = []
         for p in proba:
@@ -84,7 +87,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/stats", response_model=Stats, dependencies=[Depends(require_api_key)])
     async def stats(monitor: Monitor = Depends(get_monitor)):
         """Recent predictions compared with the model's baseline: the signals of drift."""
-        return monitor.stats()
+        return await asyncio.to_thread(monitor.stats)
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics(monitor: Monitor = Depends(get_monitor)):

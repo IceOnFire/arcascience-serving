@@ -1,16 +1,15 @@
 """Monitoring: Prometheus metrics for ops, and drift statistics against the manifest's baseline.
 
-Both live in memory, per process: they reset on restart and each worker has its own.
-That is enough for a single instance; with several, Prometheus aggregates the counters,
-and the drift window would move to shared storage.
+Prometheus counters live in memory and reset on restart: the Prometheus server that scrapes
+them keeps the history. Drift statistics are read from the prediction log, so they survive.
 """
 
 import math
-import time
-from collections import deque
 
 import numpy as np
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
+
+from .store import PredictionLog
 
 # Population Stability Index: the usual rule of thumb for how far a distribution has moved
 PSI_MODERATE, PSI_SIGNIFICANT = 0.1, 0.25
@@ -30,14 +29,15 @@ def drift_status(value):
 
 
 class Monitor:
-    def __init__(self, manifest, window_size=1000):
+    def __init__(self, manifest, log: PredictionLog, window_size=1000):
+        self.log, self.window_size = log, window_size
+        self.version = manifest["classifier"]["version"]
         self.classes = manifest["classifier"]["classes"]
         self.threshold = manifest["review_threshold"]
         self.baseline = manifest["baseline"]
         self.bins = self.baseline["confidence"]["bins"]
         if self.bins[-2] != self.threshold:
             raise ValueError("the last confidence bin must start at the review threshold")
-        self.window = deque(maxlen=window_size)   # (timestamp, category index, confidence)
 
         # A registry per app instead of the global one, so tests can build several apps
         self.registry = CollectorRegistry()
@@ -54,26 +54,28 @@ class Monitor:
         self.embed_errors = Counter("embedding_errors", "Requests that failed because the embedding API did",
                                     registry=self.registry)
 
-    def record(self, proba):
-        """Record a batch of predictions (probabilities, one row per text)."""
-        now = time.time()
-        for k, conf in zip(proba.argmax(1), proba.max(1)):
-            self.predictions.labels(self.classes[k]).inc()
+    def record(self, texts, proba):
+        """Record a batch of predictions (probabilities, one row per text). Blocking: writes to the log."""
+        categories = [self.classes[k] for k in proba.argmax(1)]
+        confidences = proba.max(1)
+        for c, conf in zip(categories, confidences):
+            self.predictions.labels(c).inc()
             self.confidence.observe(conf)
             if conf < self.threshold:
                 self.reviews.inc()
-            self.window.append((now, int(k), float(conf)))
+        self.log.insert(self.version, texts, categories, confidences, self.threshold)
 
     def stats(self):
-        """Current window compared with the baseline."""
-        n = len(self.window)
-        result = {"window": {"size": n, "capacity": self.window.maxlen,
-                             "since": self.window[0][0] if n else None}}
+        """The latest predictions of this model version, compared with its baseline. Blocking: reads the log."""
+        rows = self.log.recent(self.version, self.window_size)   # newest first
+        n = len(rows)
+        result = {"window": {"size": n, "capacity": self.window_size, "since": rows[-1][0] if n else None}}
         if not n:
             return result | {"drift": None}
 
-        cats = np.array([k for _, k, _ in self.window])
-        confs = np.array([c for _, _, c in self.window])
+        index = {c: i for i, c in enumerate(self.classes)}
+        cats = np.array([index[c] for _, c, _ in rows])
+        confs = np.array([conf for _, _, conf in rows])
         cat_shares = (np.bincount(cats, minlength=len(self.classes)) / n).tolist()
         # Same bins as the baseline; the last one includes 1.0
         conf_counts, _ = np.histogram(confs, bins=self.bins)

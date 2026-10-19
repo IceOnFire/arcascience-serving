@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     gpu_model_server_api_key: str   # upstream embedding API key; never leaves the server
     embedding_url: str              # upstream embedding API endpoint
     model_dir: Path = Path(__file__).resolve().parent.parent / "model"
+    database_path: Path = Path(__file__).resolve().parent.parent / "var" / "predictions.sqlite3"
 
     embed_batch_size: int = 128     # texts per upstream request, as in optimized_embedder.py
     embed_timeout: float = 30.0     # seconds per upstream request

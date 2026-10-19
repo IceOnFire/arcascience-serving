@@ -43,7 +43,7 @@ Settings are read from environment variables, or from `api/.env` (gitignored). T
 | `EMBEDDING_URL`            | The embedding API endpoint                                                   |
 | `GPU_MODEL_SERVER_API_KEY` | The embedding API key. It is used only server-side and never sent to callers |
 
-Optional: `EMBED_BATCH_SIZE` (128), `EMBED_TIMEOUT` in seconds (30), `EMBED_RETRIES` (3), `STATS_WINDOW` (1000, see [Monitoring](#monitoring)).
+Optional: `EMBED_BATCH_SIZE` (128), `EMBED_TIMEOUT` in seconds (30), `EMBED_RETRIES` (3), `STATS_WINDOW` (1000) and `DATABASE_PATH` (`api/var/predictions.sqlite3`), see [Monitoring](#monitoring).
 
 **The API key.** `API_KEY` isn't issued by anyone: it's a shared secret you choose, and every caller must send the same value. `setup.sh` generates a random one the first time. To rotate it, run [`generate_key.sh`](api/generate_key.sh) and restart the server: it writes a new key into `.env` (readable only by you) and prints it. To look up the current key:
 
@@ -119,7 +119,9 @@ A model doesn't fail loudly. If the endpoints it receives change, for example a 
 
 **Baseline.** The manifest records what these looked like before deployment. For categories, it's the share of each predicted category over the dataset. For confidence, it's the distribution on the Part 2 test set, which is 39% below the review threshold.
 
-**`GET /stats`** compares the last 1000 predictions (`STATS_WINDOW`) with that baseline: category shares, confidence distribution, review rate. For each of the two distributions, it computes the Population Stability Index (PSI), the usual measure of how far a distribution has moved: below 0.1 is _stable_, 0.1 to 0.25 _moderate_, 0.25 and above _significant_. Drift is reported once the window holds at least 100 predictions; below that, shares are too noisy.
+**Prediction log.** Every prediction is stored in a SQLite database (`DATABASE_PATH`, gitignored), one row each: time, model version, text, category, confidence, `needs_review`. It survives restarts, and it's what drift statistics, expert labelling samples and audits are read from ("which model version classified this endpoint, and when?"). The texts are kept so experts can review them; if texts were sensitive, the log would store a hash instead.
+
+**`GET /stats`** compares the last 1000 predictions of the current model version (`STATS_WINDOW`) with that baseline. After a model upgrade, the new version starts with an empty window and is compared with its own baseline. The comparison covers category shares, confidence distribution, review rate. For each of the two distributions, it computes the Population Stability Index (PSI), the usual measure of how far a distribution has moved: below 0.1 is _stable_, 0.1 to 0.25 _moderate_, 0.25 and above _significant_. Drift is reported once the window holds at least 100 predictions; below that, shares are too noisy.
 
 A test against the live embedding API:
 
@@ -132,9 +134,11 @@ The category drift is the one the test was built to show: Pharmacokinetic goes f
 
 Drift is a signal to investigate, not a measure of accuracy: only labels can measure accuracy. That's why the plan also includes having experts periodically label a sample of live predictions.
 
-**`GET /metrics`** exposes the same events for Prometheus: predictions per category, a confidence histogram, the review count, embedding latency and errors, and the model version. Prometheus keeps the history and handles alerts. `/stats` is the quick view, and the data source for a dashboard.
+**`GET /metrics`** exposes counters for [Prometheus](https://prometheus.io/): predictions per category, a confidence histogram, the review count, embedding latency and errors, and the model version. This project doesn't include a Prometheus server. Prometheus is a separate program that pulls (_scrapes_) `/metrics` every few seconds, stores the values over time and evaluates alert rules, often with Grafana for dashboards. The counters themselves are in memory and reset when this server restarts; the history lives in Prometheus.
 
-Both are in memory, per process: they reset when the server restarts, and each worker process counts separately. That's enough for a single instance. With several, Prometheus adds up the counters, and the `/stats` window would move to shared storage.
+The two serve different purposes. Prometheus is for **operations**: is the service healthy, how fast, are errors rising, across instances. It stores numbers, never texts. The prediction log is for **the model**: what it predicted, for which text, and how that compares with the baseline.
+
+SQLite is a single file and needs no database server, which is enough for one instance. With several instances, the same table would move to Postgres.
 
 ## How it works
 
@@ -164,9 +168,11 @@ api/
     classifier.py   the Part 2 network, loaded and checked against the manifest
     embedder.py     async client for the embedding API
     monitoring.py   Prometheus metrics, drift statistics against the baseline
+    store.py        prediction log (SQLite)
     config.py       settings from environment / .env
   model/            weights + manifest.json (generated by scripts/package_model.py)
   scripts/          package_model.py
+  var/              prediction log, created at startup (gitignored)
   setup.sh          creates .venv, installs dependencies, creates .env with a random API_KEY
   run.sh            starts the server
   generate_key.sh   writes a new random API_KEY to .env (rotation)

@@ -6,29 +6,25 @@ import Tabs from "@mui/material/Tabs"
 import Toolbar from "@mui/material/Toolbar"
 import Tooltip from "@mui/material/Tooltip"
 import Typography from "@mui/material/Typography"
-import { useEffect, useState } from "react"
+import {
+  createLink,
+  getRouteApi,
+  Outlet,
+  useLocation,
+} from "@tanstack/react-router"
 
-import { api, type Manifest } from "./api/client"
+import type { Manifest } from "./api/client"
 import { formatPercent } from "./lib/stats"
-import { ClassifyPage } from "./pages/ClassifyPage"
-import { MonitoringPage } from "./pages/MonitoringPage"
 
-type Page = "classify" | "monitoring"
+// A Material UI tab that navigates like a router link
+const TabLink = createLink(Tab)
 
-// The tab follows the URL hash, so it survives a reload and can be linked to
-const pageFromHash = (): Page =>
-  window.location.hash === "#monitoring" ? "monitoring" : "classify"
+const root = getRouteApi("__root__")
+const TABS = ["/", "/monitoring"]
 
-export function App() {
-  const [page, setPage] = useState<Page>(pageFromHash)
-  const [model, setModel] = useState<Manifest>()
-
-  useEffect(() => {
-    api.model().then(setModel, () => {})
-    const onHashChange = () => setPage(pageFromHash())
-    window.addEventListener("hashchange", onHashChange)
-    return () => window.removeEventListener("hashchange", onHashChange)
-  }, [])
+export function Layout() {
+  const model = root.useLoaderData()
+  const pathname = useLocation({ select: (location) => location.pathname })
 
   return (
     <>
@@ -40,20 +36,18 @@ export function App() {
           {model && <ModelChip model={model} />}
         </Toolbar>
         <Tabs
-          value={page}
-          onChange={(_, value: Page) => {
-            window.location.hash = value
-          }}
+          // false: no tab selected, on a page that isn't one of them (Not Found)
+          value={TABS.includes(pathname) ? pathname : false}
           textColor="inherit"
           indicatorColor="secondary"
           sx={{ px: 2 }}
         >
-          <Tab value="classify" label="Classify" />
-          <Tab value="monitoring" label="Monitoring" />
+          <TabLink value="/" to="/" label="Classify" />
+          <TabLink value="/monitoring" to="/monitoring" label="Monitoring" />
         </Tabs>
       </AppBar>
       <Container maxWidth="lg" sx={{ py: 3 }}>
-        {page === "classify" ? <ClassifyPage /> : <MonitoringPage />}
+        <Outlet />
       </Container>
     </>
   )

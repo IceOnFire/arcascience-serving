@@ -12,7 +12,7 @@ pnpm dev                       # http://localhost:5173
 API_URL=http://127.0.0.1:8001 pnpm dev   # if the API runs on another port
 ```
 
-The dev server forwards `/api/*` to the API and adds the API key from `api/.env` (see [`vite.config.ts`](vite.config.ts)). Open `#monitoring` directly with http://localhost:5173/#monitoring, then run `demo/demo.sh drift` to watch it change.
+The dev server forwards `/api/*` to the API and adds the API key from `api/.env` (see [`vite.config.ts`](vite.config.ts)). Open the monitoring page directly at http://localhost:5173/monitoring, then run `demo/demo.sh drift` to watch it change.
 
 | Command          | Does                                                           |
 | ---------------- | -------------------------------------------------------------- |
@@ -33,12 +33,14 @@ src/
   lib/usePolling.ts     reloads data at an interval, keeping the last result on errors
   components/           SharesChart (live vs baseline bars), StatCard
   pages/                ClassifyPage, MonitoringPage
-  App.tsx               app bar, model version, tabs (they follow the URL hash)
+  router.tsx            routes (/ and /monitoring), with TanStack Router
+  Layout.tsx            app bar, model version, tabs as router links
   main.tsx              Material UI theme, light or dark following the system
 ```
 
 ## Notes
 
+- **Routing.** [TanStack Router](https://tanstack.com/router), with routes declared in code ([`router.tsx`](src/router.tsx)): for two pages, file-based routing and its Vite plugin would be more machinery than code. Pages have real paths (History API), like with Inglorious Web's router. Links are type-checked: `to="/monitorin"` doesn't compile. The root route's loader fetches the model manifest for the app bar. Real paths need the server to answer every path with `index.html`: Vite does it in development and in `pnpm preview`, and a production server must be configured to.
 - **TypeScript 7 and the type generator.** The app uses TypeScript 7, like the Inglorious Web templates. `openapi-typescript` still needs TypeScript 5's JavaScript compiler API, which TypeScript 7 no longer has, and a pnpm peer dependency can't be pointed at another version. So `pnpm gen:api` runs the generator with `pnpm dlx`, in its own environment, with both versions pinned.
 - **Light and dark.** The theme follows the system. It uses CSS variables, so the scheme comes from a media query and dark systems don't see a flash of the light theme on load. The charts get their colours as CSS variable references too: with fixed values, the dark theme's axis labels were black on black. Checked in Chrome; Firefox and Safari not yet.
 - **Bundle size.** The build is a single 890 kB JavaScript file, mostly Material UI and Recharts, and Vite warns about it. Loading the Monitoring page lazily would move Recharts into its own chunk; not done yet.

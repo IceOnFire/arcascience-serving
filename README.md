@@ -91,15 +91,15 @@ The two texts show both outcomes. "Maximum plasma concentration (Cmax)" is a tex
 
 More texts to try:
 
-| Text | Prediction | Confidence | `needs_review` |
-| --- | --- | --- | --- |
-| Incidence of treatment-emergent adverse events | Adverse Event | 0.982 | false |
-| Incidence of anti-drug antibodies | Immunogenicity | 0.989 | false |
-| All-cause mortality at 12 months | Mortality | 0.978 | false |
-| Total healthcare costs per patient | Cost | 0.980 | false |
-| Pain score | General Case (2nd: Pharmacokinetic 0.12) | 0.817 | true |
-| Body weight | General Case (2nd: COA Tool 0.15) | 0.744 | true |
-| Time to first exacerbation | Pharmacokinetic (2nd: General Case 0.26) | 0.661 | true |
+| Text                                           | Prediction                               | Confidence | `needs_review` |
+| ---------------------------------------------- | ---------------------------------------- | ---------- | -------------- |
+| Incidence of treatment-emergent adverse events | Adverse Event                            | 0.982      | false          |
+| Incidence of anti-drug antibodies              | Immunogenicity                           | 0.989      | false          |
+| All-cause mortality at 12 months               | Mortality                                | 0.978      | false          |
+| Total healthcare costs per patient             | Cost                                     | 0.980      | false          |
+| Pain score                                     | General Case (2nd: Pharmacokinetic 0.12) | 0.817      | true           |
+| Body weight                                    | General Case (2nd: COA Tool 0.15)        | 0.744      | true           |
+| Time to first exacerbation                     | Pharmacokinetic (2nd: General Case 0.26) | 0.661      | true           |
 
 The last row is the reason the flag exists: the top guess is wrong, but the model's low confidence sends it to a human instead of into the results. Confidences can vary in the third decimal between runs, because the embedding server batches requests ([Part 1B](https://github.com/IceOnFire/arcascience/blob/1fa67ec/part1b.ipynb)).
 

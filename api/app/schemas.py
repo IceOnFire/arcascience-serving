@@ -8,7 +8,8 @@ EndpointText = Annotated[str, StringConstraints(strip_whitespace=True, min_lengt
 
 class PredictRequest(BaseModel):
     texts: list[EndpointText] = Field(min_length=1, max_length=MAX_TEXTS,
-                                      examples=[["Change from baseline in HbA1c at week 24"]])
+                                      # pre-filled in /docs: one confident prediction, one flagged for review
+                                      examples=[["Maximum plasma concentration (Cmax)", "Number of participants"]])
 
 
 class CategoryScore(BaseModel):

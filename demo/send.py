@@ -4,7 +4,7 @@ Texts were written for this demo (not taken from the dataset) and scored against
 CONFIDENT texts score >= 0.93, AMBIGUOUS ones <= 0.88, so each group lands clearly on its side
 of the 0.9 review threshold despite small run-to-run variations.
 
-Usage (normally through ../demo.sh):
+Usage (normally through demo.sh, from the repository root):
   python3 demo/send.py traffic|drift|review [count]
   python3 demo/send.py stats|alerts
 """

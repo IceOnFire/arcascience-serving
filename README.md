@@ -47,7 +47,7 @@ docker compose up --build -d
 
 Every service listens on `localhost` only. Docker doesn't pick another port by itself: if one is taken, for example by `api/run.sh` on 8000, `up` fails, and you can choose others with `API_PORT=8001 PROMETHEUS_PORT=9091 GRAFANA_PORT=3001 docker compose up -d`. Stop with `docker compose down`; add `-v` to also delete the prediction log and the Prometheus history, which are kept in Docker volumes.
 
-Then make the monitoring move with [`./demo.sh traffic`](demo/README.md).
+Then make the monitoring move with [`demo/demo.sh traffic`](demo/README.md).
 
 **Without Docker**, only the API runs, on Python 3.14 (any recent 3.x should work), on macOS or Linux:
 
@@ -109,9 +109,8 @@ What this project deliberately leaves out, and what I would do next.
 ```
 README.md           this overview
 docker-compose.yml  API + Prometheus + Grafana
-demo.sh             demo scenarios (see demo/)
 api/                the FastAPI service, its model, tests and scripts    → api/README.md
 prometheus/         scrape configuration and alert rules                 → prometheus/README.md
 grafana/            data source and dashboard, provisioned at startup    → grafana/README.md
-demo/               demo texts and the outage override                   → demo/README.md
+demo/               demo scenarios that move the monitoring signals      → demo/README.md
 ```

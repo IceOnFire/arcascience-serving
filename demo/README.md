@@ -1,8 +1,8 @@
 # Demo scenarios
 
-[`../demo.sh`](../demo.sh) makes each monitoring signal move on purpose, against the [Docker setup](../README.md#quick-start). It sends texts written for the demo (not taken from the dataset), whose predictions were checked to land clearly on either side of the 0.9 review threshold: confident texts score at least 0.93, ambiguous ones at most 0.88 ([`send.py`](send.py)).
+[`demo.sh`](demo.sh) makes each monitoring signal move on purpose, against the [Docker setup](../README.md#quick-start). It sends texts written for the demo (not taken from the dataset), whose predictions were checked to land clearly on either side of the 0.9 review threshold: confident texts score at least 0.93, ambiguous ones at most 0.88 ([`send.py`](send.py)).
 
-From the repository root:
+From this folder (the script works from anywhere: it switches to the repository root, where `docker-compose.yml` is):
 
 ```bash
 ./demo.sh traffic        # normal traffic
@@ -33,7 +33,7 @@ To start over with empty data: `docker compose down -v && docker compose up -d`.
 ## Files
 
 ```
-../demo.sh    the scenarios: sends traffic through send.py, drives Docker for outage/down/restore
+demo.sh       the scenarios: sends traffic through send.py, drives Docker for outage/down/restore
 send.py       demo texts, traffic generation, /stats and alert summaries (Python standard library only)
 outage.yml    Compose override pointing the API at an unreachable embedding API
 ```

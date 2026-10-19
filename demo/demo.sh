@@ -11,7 +11,7 @@
 #   ./demo.sh status            /stats summary and Prometheus alerts
 set -eu
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."   # the repository root, where docker-compose.yml is
 
 wait_healthy() {
     printf "waiting for the API"

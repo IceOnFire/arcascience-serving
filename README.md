@@ -136,7 +136,12 @@ Drift is a signal to investigate, not a measure of accuracy: only labels can mea
 
 **`GET /metrics`** exposes counters for [Prometheus](https://prometheus.io/): predictions per category, a confidence histogram, the review count, embedding latency and errors, and the model version. This project doesn't include a Prometheus server. Prometheus is a separate program that pulls (_scrapes_) `/metrics` every few seconds, stores the values over time and evaluates alert rules, often with Grafana for dashboards. The counters themselves are in memory and reset when this server restarts; the history lives in Prometheus.
 
-The two serve different purposes. Prometheus is for **operations**: is the service healthy, how fast, are errors rising, across instances. It stores numbers, never texts. The prediction log is for **the model**: what it predicted, for which text, and how that compares with the baseline.
+In HTTP terms, this API is the server and Prometheus is the client that pulls from it; Prometheus is in turn a server for Grafana. The `prometheus_client` package is named after Prometheus's own terminology, where "client library" means the library embedded in the application being monitored. What [`monitoring.py`](api/app/monitoring.py) does is usually called _instrumentation_.
+
+**Two stores, one source of truth.** The prediction log and Prometheus partly overlap: both count predictions by category and confidence. They have different roles:
+
+- The **prediction log is the source of truth** for predictions. It keeps every event with its text and model version, so anything else can be recomputed from it. Drift is computed from the log only.
+- **Prometheus metrics are disposable telemetry** for operations: service health, latency, upstream errors, and alerts such as "review rate above 50% for an hour". They are aggregates and can be lost without losing information. Prometheus can't replace the log, because it stores numbers, not texts: putting texts in its labels is an anti-pattern, since each distinct value becomes a separate time series. Without texts there would be no samples for expert labelling, no audit trail and no way to replay past inputs through a new model.
 
 SQLite is a single file and needs no database server, which is enough for one instance. With several instances, the same table would move to Postgres.
 

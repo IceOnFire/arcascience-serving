@@ -203,6 +203,30 @@ git add model/ && git commit -m "Publish classifier v1.0.0"
 
 Committing a 1.8 MB file to git stands in for a model registry. In a real pipeline, the training job would run this step itself and push the result to a registry (MLflow, or a versioned S3 bucket), and the server would fetch a pinned version at deploy time.
 
+## Known limitations and next steps
+
+What this project deliberately leaves out, and what I would do next.
+
+**Model**
+
+- **Simplest model first.** The [appendix](https://github.com/IceOnFire/arcascience/blob/1fa67ec/appendix_classic_baseline.ipynb) of the submission shows that a logistic regression on TF-IDF and embeddings matches the neural network. Before relying on the network in production, I would serve both side by side and compare them on live traffic: same accuracy, simpler to run and to explain.
+- **A slightly optimistic baseline.** The category shares in the drift baseline come from the whole dataset, training texts included, so they are a little closer to the true labels than predictions on unseen text would be. A training pipeline that keeps the test split would compute the baseline on it.
+- **No accuracy on live data.** Drift shows that the inputs changed, not whether the predictions are still correct. The prediction log keeps the texts so that experts can label a sample; the tooling for that (sampling, a review screen, accuracy over time) doesn't exist yet.
+- **Model registry.** The weights are committed to git, and the evaluation metrics are typed by hand into the packaging command. In a real pipeline, the training job would write the manifest and publish the model to a registry, and the server would fetch a pinned version at deploy time.
+- **PyTorch for a small network.** The classifier is a network of about 460,000 weights that classifies 256 texts in half a millisecond, yet PyTorch is 590 MB of the 800 MB of installed packages. Exporting it to ONNX, or to plain NumPy matrix products, would make the server much lighter.
+
+**Service**
+
+- **One shared API key.** Each client should have its own key, so one can be revoked without affecting the others, or authentication should go through an identity provider (OAuth/JWT). There is also no rate limiting: a caller can send 256 texts per request as fast as it likes.
+- **One instance.** The prediction log is a SQLite file, which works for a single server. With several instances, it would move to Postgres.
+- **The log grows forever.** Nothing deletes old predictions. A retention policy is needed, and if the texts were sensitive, the log would store a hash instead of the text.
+- **No embedding cache.** The same text is embedded again on every request. Since embeddings are deterministic (up to batching noise), a cache keyed by text would save calls to the embedding API and keep the service partly available when that API is down.
+- **Liveness only.** `/health` says the process is up, not that it can serve predictions. A readiness check would also verify the embedding API.
+
+**Dependencies**
+
+- **`httpx` to `httpx2`.** The embedding client uses `httpx`, whose last release was in December 2024; development has moved to [`httpx2`](https://github.com/pydantic/httpx2). The tests mock it with `respx`, which only supports `httpx`. Moving to `httpx2` means replacing `respx` with a mock transport, which `httpx2` allows without an extra library.
+
 ## Layout
 
 ```

@@ -39,9 +39,10 @@ def git(repo, *args):
     return subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, check=True).stdout.strip()
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("source", type=Path, help="Training repository (the technical test submission)")
+    parser.add_argument("--output", type=Path, default=MODEL_DIR, help=f"Where to write (default: {MODEL_DIR})")
     parser.add_argument("--version", default="1.0.0", help="Classifier version to publish")
     parser.add_argument("--embedding-model", default="arca-endpoint-embedder",
                         help="Embedding model the classifier was trained on (MODEL_NAME in optimized_embedder.py)")
@@ -52,7 +53,7 @@ def main():
     parser.add_argument("--test-confidence", required=True,
                         help=f"Share of test items per confidence bin {CONFIDENCE_BINS}, comma-separated "
                              "(share_of_test in part2.ipynb, Section 9)")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     test_confidence = [float(x) for x in args.test_confidence.split(",")]
     if len(test_confidence) != len(CONFIDENCE_BINS) - 1 or abs(sum(test_confidence) - 1) > 0.01:
         raise SystemExit(f"--test-confidence needs {len(CONFIDENCE_BINS) - 1} shares summing to 1")
@@ -71,8 +72,8 @@ def main():
 
     category_shares = predicted_shares(args.source, checkpoint, dimension)
 
-    MODEL_DIR.mkdir(exist_ok=True)
-    dst = MODEL_DIR / src.name
+    args.output.mkdir(parents=True, exist_ok=True)
+    dst = args.output / src.name
     shutil.copyfile(src, dst)
 
     manifest = {
@@ -104,7 +105,7 @@ def main():
             },
         },
     }
-    (MODEL_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"Packaged {dst.name} v{args.version} from {commit}: {len(checkpoint['classes'])} classes, "
           f"{dimension}-dim input, sha256 {manifest['classifier']['sha256'][:12]}...")
 

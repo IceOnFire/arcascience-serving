@@ -1,6 +1,7 @@
 # docker compose up --build
 #   API:        http://localhost:8000/docs
 #   Prometheus: http://localhost:9090
+#   Grafana:    http://localhost:3000
 name: endpoint-classifier
 
 services:
@@ -23,6 +24,24 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.2.4
+    environment:
+      # Local demo: anyone on localhost can view, without logging in. Editing needs the
+      # admin login (admin/admin by default), and the provisioned dashboard is read-only.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/endpoint-classifier.json
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - prometheus
     restart: unless-stopped
 
 volumes:

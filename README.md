@@ -45,8 +45,9 @@ docker compose up --build -d
 | ---------- | -------------------------- |
 | API        | http://localhost:8000/docs |
 | Prometheus | http://localhost:9090      |
+| Grafana    | http://localhost:3000      |
 
-Both listen on `localhost` only. If a port is taken, for example by `./run.sh` on 8000, choose others: `API_PORT=8001 PROMETHEUS_PORT=9091 docker compose up -d`. Stop with `docker compose down`; add `-v` to also delete the prediction log and the Prometheus history, which are kept in Docker volumes.
+Both listen on `localhost` only. If a port is taken, for example by `./run.sh` on 8000, choose others: `API_PORT=8001 PROMETHEUS_PORT=9091 GRAFANA_PORT=3001 docker compose up -d`. Stop with `docker compose down`; add `-v` to also delete the prediction log and the Prometheus history, which are kept in Docker volumes. Docker doesn't pick another port by itself: if one is taken, `up` fails.
 
 The [image](api/Dockerfile) contains only the app, the model and the runtime dependencies, and runs as an unprivileged user. It installs PyTorch's CPU-only build: the default build for x86_64 Linux bundles several GB of CUDA libraries that a CPU server never uses. The image is still 1.4 GB, almost half of it PyTorch (see [limitations](#known-limitations-and-next-steps)). The keys are read from `api/.env` when the container starts and are never copied into the image.
 
@@ -161,7 +162,13 @@ Drift is a signal to investigate, not a measure of accuracy: only labels can mea
 | `sum(increase(predictions_needs_review_total[1h])) / sum(increase(predictions_total[1h]))` | Share of predictions that needed review in the last hour |
 | `histogram_quantile(0.95, rate(embedding_request_seconds_bucket[5m]))`                     | 95th percentile of embedding API latency                 |
 
-Three alert rules are defined in [`prometheus/alerts.yml`](prometheus/alerts.yml) and listed under _Alerts_: the API is unreachable, the embedding API is failing, or more than 60% of predictions need review for 15 minutes (the Part 2 test set had 39%). Prometheus evaluates them, but sending notifications (email, Slack) would need Alertmanager, which this setup doesn't include.
+Three alert rules are defined in [`prometheus/alerts.yml`](prometheus/alerts.yml) and listed under _Alerts_: the API is unreachable, the embedding API is failing, or more than 60% of predictions need review for 15 minutes (the Part 2 test set had 39%). Prometheus evaluates them, but sending notifications (email, Slack) would need Alertmanager, which this setup doesn't include. The review-rate alert only fires with at least 50 predictions in the hour: like the 100-prediction minimum in `/stats`, it keeps a handful of ambiguous texts from raising an alarm.
+
+**Grafana** (http://localhost:3000, no login needed) opens on the _Endpoint classifier_ dashboard: model version, predictions, review share, embedding errors and firing alerts at the top; below, predictions per minute by category, the review share over time against the 39% test-set level and the 60% alert threshold, the confidence distribution, and the embedding API latency (p50, p95).
+
+The data source and the dashboard are [provisioned from files](grafana/) at startup, so there is nothing to set up by hand, and the dashboard is versioned with the code. To change it, edit [`grafana/dashboards/endpoint-classifier.json`](grafana/dashboards/endpoint-classifier.json), not the UI. Visitors on `localhost` get read-only access without logging in; the admin login is `admin`/`admin`, which is acceptable only because every port listens on `localhost`.
+
+Grafana and the [`/stats`](#monitoring) endpoint answer different questions. Grafana shows the service over time, from Prometheus. Comparing live predictions with the model's baseline needs the baseline and the PSI computation, which only the API has.
 
 In HTTP terms, this API is the server and Prometheus is the client that pulls from it; Prometheus is in turn a server for Grafana. The `prometheus_client` package is named after Prometheus's own terminology, where "client library" means the library embedded in the application being monitored. What [`monitoring.py`](api/app/monitoring.py) does is usually called _instrumentation_.
 
@@ -257,8 +264,9 @@ What this project deliberately leaves out, and what I would do next.
 ## Layout
 
 ```
-docker-compose.yml  API + Prometheus
+docker-compose.yml  API + Prometheus + Grafana
 prometheus/         scrape configuration and alert rules
+grafana/            data source and dashboard, provisioned at startup
 api/
   app/
     main.py         app factory, endpoints, authentication, error handling

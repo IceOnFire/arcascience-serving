@@ -15,10 +15,12 @@ groups:
           summary: Predictions are failing because the embedding API is
 
       - alert: HighReviewRate
-        # In Part 2, 39% of test predictions needed review; well above that, inputs have changed
+        # In Part 2, 39% of test predictions needed review; well above that, inputs have changed.
+        # Only with enough traffic: a handful of ambiguous texts shouldn't page anyone.
         expr: >
           sum(increase(predictions_needs_review_total[1h]))
             / sum(increase(predictions_total[1h])) > 0.6
+          and sum(increase(predictions_total[1h])) >= 50
         for: 15m
         annotations:
           summary: More than 60% of predictions need human review

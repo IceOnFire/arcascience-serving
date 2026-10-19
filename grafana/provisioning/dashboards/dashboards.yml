@@ -1,0 +1,9 @@
+# Dashboards are files in grafana/dashboards/, loaded at startup: edit the JSON, not the UI
+apiVersion: 1
+providers:
+  - name: endpoint-classifier
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards

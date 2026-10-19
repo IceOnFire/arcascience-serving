@@ -8,7 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 
-import httpx
+import httpx   # the embedding client's library: fake upstream responses must be httpx objects
 import numpy as np
 import pytest
 import respx

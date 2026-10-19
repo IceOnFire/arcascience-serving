@@ -1,6 +1,6 @@
 import json
 
-import httpx
+import httpx   # the embedding client's library: fake upstream responses must be httpx objects
 import pytest
 from fastapi.testclient import TestClient
 

@@ -1,0 +1,7 @@
+# Compose override used by `./demo.sh outage`: points the API at an address where nothing
+# listens, so every call to the embedding API fails (connection refused).
+# `./demo.sh restore` recreates the API without this file.
+services:
+  api:
+    environment:
+      EMBEDDING_URL: http://127.0.0.1:9/unreachable

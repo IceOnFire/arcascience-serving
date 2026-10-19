@@ -179,6 +179,33 @@ In HTTP terms, this API is the server and Prometheus is the client that pulls fr
 
 SQLite is a single file and needs no database server, which is enough for one instance. With several instances, the same table would move to Postgres.
 
+## Demo scenarios
+
+[`demo.sh`](demo.sh) makes each monitoring signal move on purpose, against the Docker setup. It sends texts written for the demo (not taken from the dataset), whose predictions were checked to land clearly on either side of the 0.9 threshold ([`demo/send.py`](demo/send.py)).
+
+```bash
+./demo.sh traffic        # normal traffic
+./demo.sh status         # /stats summary and Prometheus alerts, at any time
+```
+
+| Scenario                  | What it does                                                                                                                    | What to look at                                                                                                                                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `./demo.sh traffic [100]` | Normal traffic: categories and confidence in the baseline's proportions (about 39% need review)                                 | Grafana: predictions per minute, review share near the 39% line. `/stats`: drift _stable_                                                                                                                                    |
+| `./demo.sh drift [400]`   | Only pharmacokinetic endpoints, as if a new client sent only PK studies                                                         | `/stats`: category drift _significant_. Grafana: the Pharmacokinetic band grows                                                                                                                                              |
+| `./demo.sh review [60]`   | Only ambiguous endpoints                                                                                                        | `/stats`: review rate rises. Grafana: _Needs review_ turns orange, then red. Prometheus: `HighReviewRate` becomes _pending_ once ambiguous predictions are over 60% of the last hour, and fires after 15 minutes (see below) |
+| `./demo.sh outage`        | Points the API at an unreachable embedding API ([`demo/outage.yml`](demo/outage.yml)) and sends 3 requests, which fail with 503 | Grafana: _Embedding errors_ and _Firing alerts_. `EmbeddingApiFailing` fires within a minute. `/health` still says 200: it only checks the process ([limitations](#known-limitations-and-next-steps))                        |
+| `./demo.sh down`          | Stops the API container                                                                                                         | `ApiDown` fires about a minute later                                                                                                                                                                                         |
+| `./demo.sh restore`       | Back to normal after `outage` or `down`                                                                                         | Alerts resolve: `ApiDown` at once, `EmbeddingApiFailing` 5 minutes after the last error                                                                                                                                      |
+
+Some behaviours worth knowing:
+
+- **Drift is measured on the last 1000 predictions.** After `drift`, the window stays skewed until enough normal traffic replaces it: `./demo.sh traffic 1000` resets it to _stable_. A single `drift` of 150 texts after a full window of normal traffic only reaches _moderate_; that dilution is intended, so that a short burst doesn't count as drift.
+- **`outage` and `restore` recreate the API container**, so the Prometheus counters restart from zero (the prediction log is kept). Prometheus handles counter resets in `increase()` and `rate()`, but panels can show a short gap.
+- **`HighReviewRate` looks at the last hour**: it needs at least 50 predictions, more than 60% of them flagged. On a fresh stack, the default 60 ambiguous texts are enough. After other scenarios, the hour already holds many predictions: with about 3,600 at 23% review, it took `./demo.sh review 4000` to reach 64%.
+- **The demo texts are written in my words, not in the dataset's style**, and the model is less sure about many of them than about the dataset's texts: "Change from baseline in systolic blood pressure" gets 0.41. That's a small, real example of what drift monitoring is for.
+
+To start over with empty data: `docker compose down -v && docker compose up -d`.
+
 ## How it works
 
 **`needs_review`.** In Part 2, predictions with confidence above 0.9 covered 61% of the test set and were 89% correct. Below that threshold, a prediction should go to a human. The threshold is part of the model's manifest, not of the code, because it was measured on this specific model.
@@ -265,6 +292,8 @@ What this project deliberately leaves out, and what I would do next.
 
 ```
 docker-compose.yml  API + Prometheus + Grafana
+demo.sh             demo scenarios that move the monitoring signals
+demo/               demo texts and the outage override
 prometheus/         scrape configuration and alert rules
 grafana/            data source and dashboard, provisioned at startup
 api/

@@ -8,7 +8,8 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    gpu_model_server_api_key: str = ""
+    api_key: str = ""                   # what callers send in X-API-Key; required at startup
+    gpu_model_server_api_key: str = ""  # upstream embedding API key; never leaves the server
     embedding_url: str = "https://model-gpu-test.arcascience.ai/text-embedding"
     model_dir: Path = Path(__file__).resolve().parent.parent / "model"
 

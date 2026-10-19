@@ -6,11 +6,13 @@ This is a follow-up project, written after the submission. The submission reposi
 
 ## What's here
 
-Putting a model in production raises three questions. Each part of this repository answers one of them:
+Putting a model in production raises three questions. Each part of this repository answers one of them, and a web interface brings them together:
 
 1. **How do I serve the model?** [`api/`](api/README.md) is a FastAPI service: text goes in, a category comes out, with a confidence and a flag for human review. The model is versioned together with the embedding space it depends on.
 2. **How do I know when it stops working?** A model doesn't fail loudly, so the API compares its live predictions with a baseline (`/stats`), and exposes metrics that [`prometheus/`](prometheus/README.md) collects and alerts on, and [`grafana/`](grafana/README.md) displays.
 3. **How do I see that happen?** [`demo/`](demo/README.md) has scenarios that make each signal move on purpose: drift, an embedding API outage, the API going down.
+
+The [web interface](web/README.md) classifies endpoints and shows the API's drift statistics live. It's built with React and Material UI, and will be built a second time with Inglorious Web, my own framework, to compare the two.
 
 ```
                       ┌───────────────────────── api/ ─────────────────────────┐
@@ -47,7 +49,7 @@ docker compose up --build -d
 
 Every service listens on `localhost` only. Docker doesn't pick another port by itself: if one is taken, for example by `api/run.sh` on 8000, `up` fails, and you can choose others with `API_PORT=8001 PROMETHEUS_PORT=9091 GRAFANA_PORT=3001 docker compose up -d`. Stop with `docker compose down`; add `-v` to also delete the prediction log and the Prometheus history, which are kept in Docker volumes.
 
-Then make the monitoring move with [`demo/demo.sh traffic`](demo/README.md).
+Then make the monitoring move with [`demo/demo.sh traffic`](demo/README.md), and watch it in the [web interface](web/react/README.md): `cd web/react && pnpm install && pnpm dev`.
 
 **Without Docker**, only the API runs, on Python 3.14 (any recent 3.x should work), on macOS or Linux:
 
@@ -113,4 +115,5 @@ api/                the FastAPI service, its model, tests and scripts    → api
 prometheus/         scrape configuration and alert rules                 → prometheus/README.md
 grafana/            data source and dashboard, provisioned at startup    → grafana/README.md
 demo/               demo scenarios that move the monitoring signals      → demo/README.md
+web/                the web interface, in React (and later Inglorious)   → web/README.md
 ```

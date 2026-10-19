@@ -149,19 +149,45 @@ SQLite is a single file and needs no database server, which is enough for one in
 
 **`needs_review`.** In Part 2, predictions with confidence above 0.9 covered 61% of the test set and were 89% correct. Below that threshold, a prediction should go to a human. The threshold is part of the model's manifest, not of the code, because it was measured on this specific model.
 
-**Versioning.** The classifier only works in the embedding space it was trained on, so [`model/manifest.json`](api/model/manifest.json) pins both. It records the weights' sha256 and categories, the embedding model and its dimension, the commit the weights come from, and their evaluation. At startup the server refuses weights that don't match the manifest.
+**Versioning.** The classifier only works in the embedding space it was trained on, so [`model/manifest.json`](api/model/manifest.json) pins both. It records the weights' sha256 and categories, the embedding model and its dimension, the commit the weights come from, and their evaluation. At startup the server refuses weights that don't match the manifest. Both files are generated when a model version is published (see [below](#publishing-a-new-model-version-maintainers-only)).
 
-**Packaging a model.** [`scripts/package_model.py`](api/scripts/package_model.py) copies the weights from a clone of the submission repository and writes the manifest. Everything that can be read from the checkpoint or from git is derived. It also computes the [monitoring](#monitoring) baseline. The metrics and the test confidence distribution only exist in the notebook outputs, so they're passed explicitly:
+**Embedding client.** [`app/embedder.py`](api/app/embedder.py) carries over the Part 1B optimizations: deduplication, batching, concurrent batches, connection reuse, and retries with backoff on 429/5xx. It uses async `httpx`, so waiting on the embedding API doesn't block the server. I checked it against the embeddings used for training: on 300 texts the minimum cosine similarity was 0.9996, and all 300 predictions were identical. This rules out any difference between the embeddings the model was trained on and the ones it receives in production.
+
+## Publishing a new model version (maintainers only)
+
+You don't need this to run the server: the model is already in [`api/model/`](api/model/), committed with this repository. This section is for whoever publishes a new version of the classifier, for example after retraining it.
+
+```
+ MAINTAINER, once per model version           ANYONE, to run the server
+ ──────────────────────────────────           ─────────────────────────
+ local clone of the training repo             git clone this repo
+   models/endpoint_classifier.pt                     │
+   data/endpoints_data.csv                    ./setup.sh
+   embeddings/anchor.npy                             │
+          │                                   ./run.sh  (loads api/model/,
+ scripts/package_model.py                               checks the sha256)
+          │
+          ▼
+ api/model/endpoint_classifier.pt  ──── committed ────▶  used by the server
+ api/model/manifest.json
+```
+
+[`scripts/package_model.py`](api/scripts/package_model.py) reads a local clone of the training repository (the [submission](https://github.com/IceOnFire/arcascience/tree/1fa67ec)); it downloads nothing. It copies the weights into `api/model/` and writes the manifest:
+
+- from the checkpoint: the sha256, the categories, the input dimension;
+- from git: the source commit and the training date. It refuses to run if the weights, the dataset or the embeddings have uncommitted changes, so the manifest always points at exact files;
+- the [monitoring](#monitoring) baseline: the model's predicted category shares over the dataset.
+
+The evaluation metrics and the test confidence distribution only exist in the notebook outputs, so they're passed explicitly:
 
 ```bash
 cd api
-.venv/bin/python scripts/package_model.py path/to/arcascience \
+.venv/bin/python scripts/package_model.py path/to/arcascience --version 1.0.0 \
     --accuracy 0.739 --macro-f1 0.716 --test-confidence 0.080,0.128,0.181,0.611
+git add model/ && git commit -m "Publish classifier v1.0.0"
 ```
 
-In a real pipeline, the training job would write the manifest itself.
-
-**Embedding client.** [`app/embedder.py`](api/app/embedder.py) carries over the Part 1B optimizations: deduplication, batching, concurrent batches, connection reuse, and retries with backoff on 429/5xx. It uses async `httpx`, so waiting on the embedding API doesn't block the server. I checked it against the embeddings used for training: on 300 texts the minimum cosine similarity was 0.9996, and all 300 predictions were identical. This rules out any difference between the embeddings the model was trained on and the ones it receives in production.
+Committing a 1.8 MB file to git stands in for a model registry. In a real pipeline, the training job would run this step itself and push the result to a registry (MLflow, or a versioned S3 bucket), and the server would fetch a pinned version at deploy time.
 
 ## Layout
 

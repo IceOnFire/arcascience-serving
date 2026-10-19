@@ -66,6 +66,7 @@ Things found while building it, with Inglorious packages as of 2026-10-19 (web 6
 - **Chart colours in dark mode**: the renderers draw text and lines with fixed colours tuned for a light background, and don't read the `--iw-chart-*` variables. CSS takes precedence over SVG attributes, so [`app.css`](src/app.css) makes them follow the theme.
 - **Linear `Progress` ignores `color`**: it's applied by the circular variant only. Passing the class (`iw-progress-warning`) through `className` works.
 - **`Button`'s default `color` is a neutral `"default"`**, which its type doesn't list; the Classify button sets `color: "primary"`.
+- **A default `Chip` is invisible on white**: in the material light theme its background is the theme's white secondary background, the same as cards and tables. The category chips use `color: "secondary"`, a grey pill like Material UI's default chip.
 - **`Tooltip` declares `onClick` as required**, though it opens on hover; the model chip passes an empty one.
 - **`Tabs` can't select no tab through its types**: `undefined` falls back to the first tab, and `null` isn't allowed, so the Not Found page passes a value no tab has.
 - **`Table` never wraps its cells** (`min-width: max-content`) and scrolls instead; the results table lets the long _Alternatives_ column wrap.

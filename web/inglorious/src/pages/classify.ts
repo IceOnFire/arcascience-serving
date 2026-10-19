@@ -37,7 +37,11 @@ const ResultsTable = {
     const p = row.prediction as Prediction
     switch (column.id) {
       case "category":
-        return cell(Chip.render({ children: p.category, size: "sm" }))
+        return cell(
+          // A grey pill, like MUI's default chip. The default chip's background is the
+          // material theme's white secondary background, invisible on the table
+          Chip.render({ children: p.category, color: "secondary", size: "sm" }),
+        )
       case "confidence":
         return cell(
           html`<div class="confidence">

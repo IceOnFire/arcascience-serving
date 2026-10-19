@@ -157,7 +157,8 @@ SQLite is a single file and needs no database server, which is enough for one in
 
 ```bash
 cd api
-.venv/bin/python -m pytest
+./test.sh                      # all tests
+./test.sh -k stats             # extra arguments go to pytest
 ```
 
 The tests need no network and no API key: the embedding API is mocked with [respx](https://lundberg.github.io/respx/). The README's example texts get their real embeddings, captured once from the API into [`tests/fixtures/embeddings.json`](api/tests/fixtures/embeddings.json), so the tests check real predictions: Cmax is confident, "Number of participants" is flagged. Any other text gets a deterministic random vector.
@@ -220,5 +221,6 @@ api/
   var/              prediction log, created at startup (gitignored)
   setup.sh          creates .venv, installs dependencies, creates .env with a random API_KEY
   run.sh            starts the server
+  test.sh           runs the test suite
   generate_key.sh   writes a new random API_KEY to .env (rotation)
 ```

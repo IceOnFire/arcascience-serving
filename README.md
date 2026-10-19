@@ -37,10 +37,10 @@ Open http://localhost:8000/docs for the interactive documentation. Click **Autho
 
 Settings are read from environment variables, or from `api/.env` (gitignored). There are no defaults for these three: if one is missing, the server refuses to start and names it.
 
-| Variable | Purpose |
-|---|---|
-| `API_KEY` | The key callers send in the `X-API-Key` header |
-| `EMBEDDING_URL` | The embedding API endpoint |
+| Variable                   | Purpose                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| `API_KEY`                  | The key callers send in the `X-API-Key` header                               |
+| `EMBEDDING_URL`            | The embedding API endpoint                                                   |
 | `GPU_MODEL_SERVER_API_KEY` | The embedding API key. It is used only server-side and never sent to callers |
 
 Optional: `EMBED_BATCH_SIZE` (128), `EMBED_TIMEOUT` in seconds (30), `EMBED_RETRIES` (3).
@@ -65,22 +65,49 @@ curl -X POST localhost:8000/predict \
 {
   "model_version": "1.0.0",
   "predictions": [
-    {"category": "Pharmacokinetic", "confidence": 0.969, "needs_review": false,
-     "top": [{"category": "Pharmacokinetic", "probability": 0.969}, "..."]},
-    {"category": "General Case", "confidence": 0.653, "needs_review": true,
-     "top": [{"category": "General Case", "probability": 0.653},
-             {"category": "Demographic", "probability": 0.27}, "..."]}
+    {
+      "category": "Pharmacokinetic",
+      "confidence": 0.969,
+      "needs_review": false,
+      "top": [{ "category": "Pharmacokinetic", "probability": 0.969 }, "..."]
+    },
+    {
+      "category": "General Case",
+      "confidence": 0.653,
+      "needs_review": true,
+      "top": [
+        { "category": "General Case", "probability": 0.653 },
+        { "category": "Demographic", "probability": 0.27 },
+        "..."
+      ]
+    }
   ]
 }
 ```
 
 Predictions are returned in the same order as the input texts.
 
-| Endpoint | Auth | Description |
-|---|---|---|
-| `POST /predict` | yes | 1 to 256 texts. For each: category, confidence, top 3, `needs_review` |
-| `GET /model` | yes | The model manifest: version, embedding space, evaluation |
-| `GET /health` | no | Liveness. It doesn't call the embedding API |
+The two texts show both outcomes. "Maximum plasma concentration (Cmax)" is a textbook pharmacokinetic measure, and the model is confident (0.969). "Number of participants" could be a general count or a demographic description, and the model hesitates between the two (0.653 vs 0.27). It falls below the 0.9 threshold, so it is flagged for review.
+
+More texts to try:
+
+| Text | Prediction | Confidence | `needs_review` |
+| --- | --- | --- | --- |
+| Incidence of treatment-emergent adverse events | Adverse Event | 0.982 | false |
+| Incidence of anti-drug antibodies | Immunogenicity | 0.989 | false |
+| All-cause mortality at 12 months | Mortality | 0.978 | false |
+| Total healthcare costs per patient | Cost | 0.980 | false |
+| Pain score | General Case (2nd: Pharmacokinetic 0.12) | 0.817 | true |
+| Body weight | General Case (2nd: COA Tool 0.15) | 0.744 | true |
+| Time to first exacerbation | Pharmacokinetic (2nd: General Case 0.26) | 0.661 | true |
+
+The last row is the reason the flag exists: the top guess is wrong, but the model's low confidence sends it to a human instead of into the results. Confidences can vary in the third decimal between runs, because the embedding server batches requests ([Part 1B](https://github.com/IceOnFire/arcascience/blob/1fa67ec/part1b.ipynb)).
+
+| Endpoint        | Auth | Description                                                           |
+| --------------- | ---- | --------------------------------------------------------------------- |
+| `POST /predict` | yes  | 1 to 256 texts. For each: category, confidence, top 3, `needs_review` |
+| `GET /model`    | yes  | The model manifest: version, embedding space, evaluation              |
+| `GET /health`   | no   | Liveness. It doesn't call the embedding API                           |
 
 Error responses: `401` for a missing or wrong key, `422` for an invalid request (empty list, blank text, more than 256 texts), and `503` with `Retry-After` when the embedding API is unavailable after retries.
 

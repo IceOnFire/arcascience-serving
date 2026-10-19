@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # Make the monitoring move: send traffic, cause drift, break the embedding API, stop the API.
-# Works with the Docker setup (docker compose up). See "Demo scenarios" in README.md.
+# Works with the Docker setup (docker compose up). See demo/README.md.
 #
 #   ./demo.sh traffic [count]   normal mix of endpoints (default 100)
 #   ./demo.sh drift [count]     only pharmacokinetic endpoints (default 400)

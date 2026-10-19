@@ -1,0 +1,32 @@
+{
+  "classifier": {
+    "name": "endpoint-classifier",
+    "version": "1.0.0",
+    "file": "endpoint_classifier.pt",
+    "sha256": "659186b78128c6a222076865faf64ee7940a5cc0fa38e4a85505fa7a098c1f2d",
+    "classes": [
+      "General Case",
+      "COA Tool",
+      "Pharmacokinetic",
+      "Adverse Event",
+      "Complications",
+      "Immunogenicity",
+      "Cost",
+      "Mortality",
+      "Demographic"
+    ],
+    "source": "https://github.com/IceOnFire/arcascience/tree/1fa67ec (models/endpoint_classifier.pt)",
+    "trained_on": "2026-10-17"
+  },
+  "embedding": {
+    "model": "arca-endpoint-embedder",
+    "dimension": 768,
+    "normalize": true
+  },
+  "evaluation": {
+    "accuracy": 0.739,
+    "macro_f1": 0.716,
+    "protocol": "test sets of unseen endpoint texts (split by text), mean over 5 splits"
+  },
+  "review_threshold": 0.9
+}

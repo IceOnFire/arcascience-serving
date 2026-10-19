@@ -1,0 +1,11 @@
+fastapi>=0.146
+uvicorn[standard]>=0.54
+pydantic-settings>=2.16
+httpx>=0.28
+numpy>=2.5
+torch>=2.14
+prometheus-client>=0.26
+
+# tests
+pytest>=9.1
+respx>=0.23

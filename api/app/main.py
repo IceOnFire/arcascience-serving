@@ -16,8 +16,6 @@ from .schemas import CategoryScore, Health, Prediction, PredictRequest, PredictR
 async def lifespan(app: FastAPI):
     """Load the model and open the upstream connection once, not per request."""
     settings = app.state.settings
-    if not settings.api_key or not settings.gpu_model_server_api_key:
-        raise RuntimeError("API_KEY and GPU_MODEL_SERVER_API_KEY must be set")
     model = load_model(settings.model_dir)
     embedding = model.manifest["embedding"]
     app.state.model = model
@@ -76,6 +74,3 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return Health(status="ok", model_version=model.manifest["classifier"]["version"])
 
     return app
-
-
-app = create_app()

@@ -4,13 +4,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime configuration, read from environment variables (or a .env file)."""
+    """Runtime configuration, read from environment variables (or a .env file).
+
+    Deployment-specific values have no defaults: if one is missing, startup fails.
+    """
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    api_key: str = ""                   # what callers send in X-API-Key; required at startup
-    gpu_model_server_api_key: str = ""  # upstream embedding API key; never leaves the server
-    embedding_url: str = "https://model-gpu-test.arcascience.ai/text-embedding"
+    api_key: str                    # what callers send in X-API-Key
+    gpu_model_server_api_key: str   # upstream embedding API key; never leaves the server
+    embedding_url: str              # upstream embedding API endpoint
     model_dir: Path = Path(__file__).resolve().parent.parent / "model"
 
     embed_batch_size: int = 128     # texts per upstream request, as in optimized_embedder.py

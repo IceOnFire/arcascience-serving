@@ -17,22 +17,23 @@
     "gen:api": "pnpm dlx --package=openapi-typescript@7.13.0 --package=typescript@5.9.3 openapi-typescript ../../api/openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {
-    "@inglorious/charts": "^10.0.7",
+    "@inglorious/charts": "^11.1.0",
     "@inglorious/store": "^11.0.4",
-    "@inglorious/ui": "^8.1.1",
+    "@inglorious/ui": "^8.2.0",
     "@inglorious/web": "^6.6.1"
   },
   "devDependencies": {
-    "@inglorious/eslint-config": "^1.1.2",
+    "@inglorious/eslint-config": "^1.1.3",
     "@inglorious/vite-plugin-hmr": "^1.1.0",
     "@types/node": "^22.20.5",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^10.13.0",
     "jiti": "^2.7.0",
     "prettier": "^3.9.10",
     "rollup-plugin-minify-template-literals": "^2.2.0",
     "sharp": "^0.35.5",
     "svgo": "^4.1.0",
-    "typescript": "^7.0.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vite": "^8.3.4",
     "vite-plugin-image-optimizer": "^2.0.3",
     "vitest": "^5.0.5"

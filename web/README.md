@@ -23,12 +23,12 @@ Measured on 2026-10-19, production builds, same features:
 
 |                                   | React                                  | Inglorious Web                                               |
 | --------------------------------- | -------------------------------------- | ------------------------------------------------------------ |
-| JavaScript + CSS shipped, gzipped | 291 kB                                 | 49 kB (44 kB JS, 5.5 kB CSS)                                 |
-| Framework-specific code           | 516 lines                              | 582 lines, of which 80 of CSS                                |
+| JavaScript + CSS shipped, gzipped | 291 kB                                 | 50 kB (44 kB JS, 5.6 kB CSS)                                 |
+| Framework-specific code           | 516 lines                              | 579 lines, of which 52 of CSS                                |
 | Where state lives                 | Components (`useState`), router loader | Store entities, changed by event handlers                    |
 | Reactivity                        | Re-render components on state change   | Re-render the whole tree; lit-html updates only what changed |
 
-The Inglorious bundle is about 6 times smaller. The amount of code is about the same: what React writes as Material UI `sx` props, the Inglorious app writes as CSS, part of it working around library issues listed in its [README](inglorious/README.md#notes). The [Inglorious README](inglorious/README.md#same-app-two-models) maps each concern from one model to the other.
+The Inglorious bundle is about 6 times smaller. The amount of code is about the same: what React writes as Material UI `sx` props, the Inglorious app writes as CSS. The [Inglorious README](inglorious/README.md#same-app-two-models) maps each concern from one model to the other.
 
 ## Running
 

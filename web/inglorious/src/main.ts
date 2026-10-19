@@ -14,6 +14,7 @@ import "@inglorious/ui/alert.css"
 import "@inglorious/ui/tooltip.css"
 import "@inglorious/ui/typography.css"
 import "@inglorious/charts/base.css"
+import "@inglorious/charts/theme.css"
 import "./app.css"
 
 import { mount } from "@inglorious/web"

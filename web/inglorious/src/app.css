@@ -45,13 +45,9 @@ main {
   }
 }
 
-/* The UI table never wraps its cells (min-width: max-content) and scrolls instead; here
-   the long alternatives column wraps, so the table fits the page like the React one */
-.results-table .iw-table {
-  min-width: 0;
-}
-
-.results-table .iw-chip {
+/* Keep chips such as "Needs review", and percentages, on one line when the table wraps */
+.iw-table .iw-chip,
+.confidence span {
   white-space: nowrap;
 }
 
@@ -63,18 +59,4 @@ main {
 .iw-chart {
   width: 100%;
   height: auto;
-}
-
-/* Inglorious Charts 10.0.7 draws axis, grid and legend colours as fixed SVG attributes,
-   tuned for a light background. CSS takes precedence over SVG attributes, so these follow
-   the theme instead, in light and dark. */
-.iw-chart {
-  text {
-    fill: var(--iw-color-text-secondary);
-  }
-
-  line,
-  .iw-chart-grid line {
-    stroke: var(--iw-color-border);
-  }
 }

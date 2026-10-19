@@ -30,8 +30,6 @@ export const Model = {
         children: `model v${classifier.version}`,
         size: "sm",
       }),
-      // Declared as required in @inglorious/ui 8.1.1's types, though the tooltip opens on hover
-      onClick: () => {},
     })
   },
 }

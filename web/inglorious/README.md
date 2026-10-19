@@ -20,7 +20,7 @@ The dev server forwards `/api/*` to the API and adds the API key from `api/.env`
 | `pnpm build`     | Type-check, then build into `dist/`                            |
 | `pnpm typecheck` | Type-check only                                                |
 | `pnpm test`      | Unit tests (vitest)                                            |
-| `pnpm lint`      | Lint (eslint): fails for now, see Notes                        |
+| `pnpm lint`      | Lint (eslint)                                                  |
 | `pnpm gen:api`   | Regenerate `src/api/schema.d.ts` from `../../api/openapi.json` |
 
 ## Structure
@@ -58,16 +58,15 @@ The features are the same as in the React app; where the state lives is what dif
 
 ## Notes
 
-Things found while building it, with Inglorious packages as of 2026-10-19 (web 6.6.1, ui 8.1.1, charts 10.0.7, eslint-config 1.1.2). Each workaround is commented in the code.
+**Versions.** Inglorious web 6.6.1, store 11.0.4, ui 8.2.0, charts 11.1.0, eslint-config 1.1.3. TypeScript is set up as `create-app` 1.3.0 does it: `typescript` is TypeScript 6, whose JavaScript API typescript-eslint needs, and `@typescript/native` is TypeScript 7, which `tsc` runs.
 
-- **`pnpm lint` fails.** `@inglorious/eslint-config` 1.1.2 on npm declares a `./typescript` entry, but `typescript.js` isn't in the published package, and it has no type declarations. The monorepo has both, under the same version number, so they weren't published. Until a new version is out, `eslint.config.ts` is left out of type-checking ([`tsconfig.node.json`](tsconfig.node.json)).
-- **Charts have no TypeScript declarations**, so [`types/inglorious-charts.d.ts`](types/inglorious-charts.d.ts) declares what this app uses.
-- **Chart axes**: the Y axis has no tick formatter, so shares are plotted in percentage points and the card titles say "%". The legend names each series after its data key, so the keys are `Live` and `Baseline`. The legend has its own palette, so it gets the bars' colours.
-- **Chart colours in dark mode**: the renderers draw text and lines with fixed colours tuned for a light background, and don't read the `--iw-chart-*` variables. CSS takes precedence over SVG attributes, so [`app.css`](src/app.css) makes them follow the theme.
-- **Linear `Progress` ignores `color`**: it's applied by the circular variant only. Passing the class (`iw-progress-warning`) through `className` works.
-- **`Button`'s default `color` is a neutral `"default"`**, which its type doesn't list; the Classify button sets `color: "primary"`.
-- **A default `Chip` is invisible on white**: in the material light theme its background is the theme's white secondary background, the same as cards and tables. The category chips use `color: "secondary"`, a grey pill like Material UI's default chip.
-- **`Tooltip` declares `onClick` as required**, though it opens on hover; the model chip passes an empty one.
-- **`Tabs` can't select no tab through its types**: `undefined` falls back to the first tab, and `null` isn't allowed, so the Not Found page passes a value no tab has.
-- **`Table` never wraps its cells** (`min-width: max-content`) and scrolls instead; the results table lets the long _Alternatives_ column wrap.
-- **No `--template` or `--syntax` flags in `create-app`**: the project name, template and syntax are prompts only, so scaffolding can't be fully scripted.
+**Fixed upstream.** Building this app turned up issues in the Inglorious packages; the versions above fix them, and the app no longer works around them: the unpublished files of eslint-config 1.1.2, the missing chart type declarations, the Y axis without a tick formatter, the legend's own palette, chart colours fixed for a light background, linear `Progress` ignoring `color`, `Tooltip` requiring `onClick`, `Tabs` unable to select no tab, `Table` unable to wrap, and `create-app` without `--template` and `--syntax` flags.
+
+**Still open**, each commented in the code:
+
+- **`Chart.render` types its `api` as the default `Api<BaseEntity>`**, which an app's own `Api<AppEntity, AppState>` isn't assignable to. The call in [`shares-chart.ts`](src/components/shares-chart.ts) casts it.
+- **The shared ESLint config turns `no-magic-numbers` off for `*.test.js` only**, not for TypeScript tests. [`eslint.config.ts`](eslint.config.ts) extends it to `*.test.ts`, and to `src/lib/stats.ts`, which stays identical to the React app's copy. It also ignores 0 and 1, which here are counts, indexes and decimal places.
+- **A default `Chip` is invisible on white**: in the material light theme, its background is the theme's white secondary background, the same as cards and tables. The category chips use `color: "secondary"`, a grey pill like Material UI's default chip.
+- **`Button`'s runtime default `color` is a neutral `"default"`**, so the Classify button sets `color: "primary"`.
+- **`pnpm install` warns about peer dependencies**: `eslint-plugin-react` and `eslint-plugin-react-hooks`, which the shared ESLint config requires, don't declare support for ESLint 10 yet. Linting works.
+- **With `isWrapping`, `Table` wraps every cell**, percentages included; [`app.css`](src/app.css) keeps chips and percentages on one line.

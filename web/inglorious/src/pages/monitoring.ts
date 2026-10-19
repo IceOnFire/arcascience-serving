@@ -19,6 +19,8 @@ import {
 } from "../lib/stats"
 
 const REFRESH_MS = 5000
+const MS_PER_SECOND = 1000
+const PSI_DIGITS = 2
 
 export const Monitoring = {
   // The router broadcasts every route change. Refresh while this page is shown, stop when
@@ -64,7 +66,8 @@ export const Monitoring = {
       <div class="stack">
         ${Typography.render({
           children: html`The last ${stats.window.capacity} predictions compared
-            with the model's baseline, refreshed every ${REFRESH_MS / 1000}
+            with the model's baseline, refreshed every
+            ${REFRESH_MS / MS_PER_SECOND}
             seconds${updatedAt
               ? ` (last update ${new Date(updatedAt).toLocaleTimeString()})`
               : ""}.
@@ -103,14 +106,14 @@ export const Monitoring = {
         ${stats.window.size > 0
           ? html`
               ${Card.render({
-                title: "Predicted categories (%)",
+                title: "Predicted categories",
                 body: SharesChart.render(
                   { entity: "categoryChart", rows: categoryRows(stats) },
                   api,
                 ),
               })}
               ${Card.render({
-                title: "Confidence (%)",
+                title: "Confidence",
                 body: SharesChart.render(
                   { entity: "confidenceChart", rows: confidenceRows(stats) },
                   api,
@@ -142,6 +145,6 @@ function renderDrift(
       children: drift.status,
       color: driftColor(drift.status),
     }),
-    caption: `PSI ${drift.psi.toFixed(2)}`,
+    caption: `PSI ${drift.psi.toFixed(PSI_DIGITS)}`,
   })
 }

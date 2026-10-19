@@ -1,7 +1,17 @@
-import { Chart } from "@inglorious/charts"
+import {
+  Bar,
+  CartesianGrid,
+  Chart,
+  Legend,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "@inglorious/charts"
 
 import type { AppApi } from "../../types"
-import type { ShareRow } from "../lib/stats"
+import { formatPercent, type ShareRow } from "../lib/stats"
+
+const DEFAULT_HEIGHT = 300
 
 export interface SharesChartProps {
   /** Id of the chart entity, which holds the tooltip state */
@@ -10,20 +20,16 @@ export interface SharesChartProps {
   height?: number
 }
 
-const COLORS = ["var(--iw-color-primary)", "var(--iw-color-gray-500)"]
-
-// Live vs baseline as grouped bars, like the React app's SharesChart. Two differences
-// come from the chart library: the Y axis has no tick formatter, so shares are plotted in
-// percentage points (the card titles say "%"), and the legend shows each series' data
-// key, so the keys are the labels themselves.
+// Live vs baseline as grouped bars, like the React app's SharesChart. The legend names
+// each series after its data key, so the keys are the labels themselves.
 export function render(
-  { entity, rows, height = 300 }: SharesChartProps,
+  { entity, rows, height = DEFAULT_HEIGHT }: SharesChartProps,
   api: AppApi,
 ) {
-  const data = rows.map((row) => ({
-    label: row.label,
-    Live: Math.round(row.live * 1000) / 10,
-    Baseline: Math.round(row.baseline * 1000) / 10,
+  const data = rows.map(({ label, live, baseline }) => ({
+    label,
+    Live: live,
+    Baseline: baseline,
   }))
 
   return Chart.render(
@@ -34,16 +40,17 @@ export function render(
       height,
       data,
       children: [
-        Chart.CartesianGrid({ strokeDasharray: "3 3" }),
-        Chart.XAxis({ dataKey: "label" }),
-        Chart.YAxis(),
-        Chart.Bar({ dataKey: "Live", fill: COLORS[0] }),
-        Chart.Bar({ dataKey: "Baseline", fill: COLORS[1] }),
-        Chart.Tooltip(),
-        // The legend has its own palette: give it the bars' colours
-        Chart.Legend({ colors: COLORS }),
+        CartesianGrid({ strokeDasharray: "3 3" }),
+        XAxis({ dataKey: "label", interval: 0 }), // every category, like the React chart
+        YAxis({ tickFormatter: (value) => formatPercent(value) }),
+        Bar({ dataKey: "Live", fill: "var(--iw-color-primary)" }),
+        Bar({ dataKey: "Baseline", fill: "var(--iw-color-gray-500)" }),
+        Tooltip({ formatter: (value) => formatPercent(Number(value), 1) }),
+        Legend(),
       ],
     },
-    api,
+    // @inglorious/charts 11.1.0 types `api` as the default Api<BaseEntity>, which an app's
+    // own Api<AppEntity, AppState> isn't assignable to
+    api as Parameters<typeof Chart.render>[1],
   )
 }

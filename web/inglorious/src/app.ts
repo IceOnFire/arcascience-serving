@@ -25,9 +25,8 @@ export const App = {
         <nav class="app-tabs">
           ${Tabs.render({
             items: TABS,
-            // No tab selected on a page that isn't one of them (Not Found): a value no tab
-            // has. Not undefined, which makes Tabs fall back to the first tab
-            value: isTab ? router.path : "",
+            // No tab selected on a page that isn't one of them (Not Found)
+            value: isTab ? router.path : null,
             onChange: (path) => api.notify("#router:navigate", path),
           })}
         </nav>

@@ -12,6 +12,9 @@ import type { AppApi, ClassifyEntity, PredictOutcome } from "../../types"
 import { api as client, MAX_TEXTS, type Prediction } from "../api/client"
 import { formatPercent, parseTexts } from "../lib/stats"
 
+const PERCENT = 100
+const MIN_SHOWN_PROBABILITY = 0.01 // alternatives below 1% are noise
+
 // One confident prediction and one flagged for review, as in the API's README
 const EXAMPLE = "Maximum plasma concentration (Cmax)\nNumber of participants"
 
@@ -46,9 +49,8 @@ const ResultsTable = {
         return cell(
           html`<div class="confidence">
             ${Progress.render({
-              value: p.confidence * 100,
-              // As a class: @inglorious/ui 8.1.1's linear Progress ignores its color prop
-              className: `iw-progress-${p.needs_review ? "warning" : "success"}`,
+              value: p.confidence * PERCENT,
+              color: p.needs_review ? "warning" : "success",
             })}
             <span>${formatPercent(p.confidence)}</span>
           </div>`,
@@ -57,7 +59,7 @@ const ResultsTable = {
         return cell(
           p.top
             .slice(1)
-            .filter((t) => t.probability >= 0.01) // hide noise
+            .filter((t) => t.probability >= MIN_SHOWN_PROBABILITY)
             .map((t) => `${t.category} ${formatPercent(t.probability)}`)
             .join(", "),
           "muted",
@@ -157,13 +159,12 @@ export const Classify = {
                 variant: "caption",
                 children: `${entity.results.length} classified, ${flagged} need${flagged === 1 ? "s" : ""} review`,
               })}
-              <div class="results-table">
-                ${ResultsTable.render({
-                  columns: COLUMNS,
-                  rows: entity.results.map((r) => ({ ...r })),
-                  isFullWidth: true,
-                })}
-              </div>
+              ${ResultsTable.render({
+                columns: COLUMNS,
+                rows: entity.results.map((r) => ({ ...r })),
+                isFullWidth: true,
+                isWrapping: true, // wrap the long alternatives instead of scrolling
+              })}
             `
           : ""}
       </div>

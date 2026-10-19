@@ -1,5 +1,4 @@
 import "./vite-end"
-import "./inglorious-charts"
 
 import type { BaseEntity, EntitiesState } from "@inglorious/store"
 import type { Api, TemplateResult } from "@inglorious/web"

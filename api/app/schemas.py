@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints
 
@@ -32,3 +32,40 @@ class PredictResponse(BaseModel):
 class Health(BaseModel):
     status: str
     model_version: str
+
+
+class Window(BaseModel):
+    size: int
+    capacity: int
+    since: float | None = Field(description="Unix time of the oldest prediction in the window")
+
+
+class CategoryShare(BaseModel):
+    category: str
+    share: float
+    baseline: float
+
+
+class ConfidenceShare(BaseModel):
+    bin: tuple[float, float]
+    share: float
+    baseline: float
+
+
+class DriftScore(BaseModel):
+    psi: float = Field(description="Population Stability Index against the baseline")
+    status: Literal["stable", "moderate", "significant"] = Field(description="< 0.1, 0.1 to 0.25, >= 0.25")
+
+
+class Drift(BaseModel):
+    categories: DriftScore
+    confidence: DriftScore
+
+
+class Stats(BaseModel):
+    window: Window
+    review_rate: float | None = None
+    baseline_review_rate: float | None = None
+    categories: list[CategoryShare] = []
+    confidence: list[ConfidenceShare] = []
+    drift: Drift | None = Field(description="Null until the window holds enough predictions to compare")

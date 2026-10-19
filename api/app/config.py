@@ -19,3 +19,4 @@ class Settings(BaseSettings):
     embed_batch_size: int = 128     # texts per upstream request, as in optimized_embedder.py
     embed_timeout: float = 30.0     # seconds per upstream request
     embed_retries: int = 3          # extra attempts on 429/5xx and connection errors
+    stats_window: int = 1000        # recent predictions compared with the baseline in /stats

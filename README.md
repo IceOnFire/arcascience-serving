@@ -43,7 +43,7 @@ Settings are read from environment variables, or from `api/.env` (gitignored). T
 | `EMBEDDING_URL`            | The embedding API endpoint                                                   |
 | `GPU_MODEL_SERVER_API_KEY` | The embedding API key. It is used only server-side and never sent to callers |
 
-Optional: `EMBED_BATCH_SIZE` (128), `EMBED_TIMEOUT` in seconds (30), `EMBED_RETRIES` (3).
+Optional: `EMBED_BATCH_SIZE` (128), `EMBED_TIMEOUT` in seconds (30), `EMBED_RETRIES` (3), `STATS_WINDOW` (1000, see [Monitoring](#monitoring)).
 
 **The API key.** `API_KEY` isn't issued by anyone: it's a shared secret you choose, and every caller must send the same value. `setup.sh` generates a random one the first time. To rotate it, run [`generate_key.sh`](api/generate_key.sh) and restart the server: it writes a new key into `.env` (readable only by you) and prints it. To look up the current key:
 
@@ -103,13 +103,38 @@ More texts to try:
 
 The last row is the reason the flag exists: the top guess is wrong, but the model's low confidence sends it to a human instead of into the results. Confidences can vary in the third decimal between runs, because the embedding server batches requests ([Part 1B](https://github.com/IceOnFire/arcascience/blob/1fa67ec/part1b.ipynb)).
 
-| Endpoint        | Auth | Description                                                           |
-| --------------- | ---- | --------------------------------------------------------------------- |
-| `POST /predict` | yes  | 1 to 256 texts. For each: category, confidence, top 3, `needs_review` |
-| `GET /model`    | yes  | The model manifest: version, embedding space, evaluation              |
-| `GET /health`   | no   | Liveness. It doesn't call the embedding API                           |
+| Endpoint        | Auth | Description                                                                           |
+| --------------- | ---- | ------------------------------------------------------------------------------------- |
+| `POST /predict` | yes  | 1 to 256 texts. For each: category, confidence, top 3, `needs_review`                 |
+| `GET /model`    | yes  | The model manifest: version, embedding space, evaluation                              |
+| `GET /stats`    | yes  | Recent predictions compared with the model's baseline (see [Monitoring](#monitoring)) |
+| `GET /metrics`  | no   | Prometheus metrics. Aggregates only: restrict it at network level                     |
+| `GET /health`   | no   | Liveness. It doesn't call the embedding API                                           |
 
 Error responses: `401` for a missing or wrong key, `422` for an invalid request (empty list, blank text, more than 256 texts), and `503` with `Retry-After` when the embedding API is unavailable after retries.
+
+## Monitoring
+
+A model doesn't fail loudly. If the endpoints it receives change, for example a new client sends mostly pharmacokinetic studies, it keeps answering, and accuracy drops without any error. Monitoring watches the two signals available without labels: what the model predicts, and how confident it is.
+
+**Baseline.** The manifest records what these looked like before deployment. For categories, it's the share of each predicted category over the dataset. For confidence, it's the distribution on the Part 2 test set, which is 39% below the review threshold.
+
+**`GET /stats`** compares the last 1000 predictions (`STATS_WINDOW`) with that baseline: category shares, confidence distribution, review rate. For each of the two distributions, it computes the Population Stability Index (PSI), the usual measure of how far a distribution has moved: below 0.1 is _stable_, 0.1 to 0.25 _moderate_, 0.25 and above _significant_. Drift is reported once the window holds at least 100 predictions; below that, shares are too noisy.
+
+A test against the live embedding API:
+
+| Traffic                           | Categories          | Confidence       | Review rate |
+| --------------------------------- | ------------------- | ---------------- | ----------- |
+| 300 random texts from the dataset | stable (0.018)      | moderate (0.121) | 26%         |
+| then 256 pharmacokinetic texts    | significant (0.652) | moderate (0.181) | 22%         |
+
+The category drift is the one the test was built to show: Pharmacokinetic goes from 15% of predictions to 51%. The confidence drift on "normal" traffic is also correct. The baseline describes unseen text, but the dataset texts are mostly ones the model was trained on, so it is more confident on them than the baseline expects. A rise in confidence is a change in the input too.
+
+Drift is a signal to investigate, not a measure of accuracy: only labels can measure accuracy. That's why the plan also includes having experts periodically label a sample of live predictions.
+
+**`GET /metrics`** exposes the same events for Prometheus: predictions per category, a confidence histogram, the review count, embedding latency and errors, and the model version. Prometheus keeps the history and handles alerts. `/stats` is the quick view, and the data source for a dashboard.
+
+Both are in memory, per process: they reset when the server restarts, and each worker process counts separately. That's enough for a single instance. With several, Prometheus adds up the counters, and the `/stats` window would move to shared storage.
 
 ## How it works
 
@@ -117,11 +142,12 @@ Error responses: `401` for a missing or wrong key, `422` for an invalid request 
 
 **Versioning.** The classifier only works in the embedding space it was trained on, so [`model/manifest.json`](api/model/manifest.json) pins both. It records the weights' sha256 and categories, the embedding model and its dimension, the commit the weights come from, and their evaluation. At startup the server refuses weights that don't match the manifest.
 
-**Packaging a model.** [`scripts/package_model.py`](api/scripts/package_model.py) copies the weights from a clone of the submission repository and writes the manifest. Everything that can be read from the checkpoint or from git is derived. The metrics only exist in the notebook outputs, so they're passed explicitly:
+**Packaging a model.** [`scripts/package_model.py`](api/scripts/package_model.py) copies the weights from a clone of the submission repository and writes the manifest. Everything that can be read from the checkpoint or from git is derived. It also computes the [monitoring](#monitoring) baseline. The metrics and the test confidence distribution only exist in the notebook outputs, so they're passed explicitly:
 
 ```bash
 cd api
-.venv/bin/python scripts/package_model.py path/to/arcascience --accuracy 0.739 --macro-f1 0.716
+.venv/bin/python scripts/package_model.py path/to/arcascience \
+    --accuracy 0.739 --macro-f1 0.716 --test-confidence 0.080,0.128,0.181,0.611
 ```
 
 In a real pipeline, the training job would write the manifest itself.
@@ -137,6 +163,7 @@ api/
     schemas.py      request and response models
     classifier.py   the Part 2 network, loaded and checked against the manifest
     embedder.py     async client for the embedding API
+    monitoring.py   Prometheus metrics, drift statistics against the baseline
     config.py       settings from environment / .env
   model/            weights + manifest.json (generated by scripts/package_model.py)
   scripts/          package_model.py

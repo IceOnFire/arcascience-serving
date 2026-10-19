@@ -69,3 +69,51 @@ class Stats(BaseModel):
     categories: list[CategoryShare] = []
     confidence: list[ConfidenceShare] = []
     drift: Drift | None = Field(description="Null until the window holds enough predictions to compare")
+
+
+# --- Model manifest (written by scripts/package_model.py) ----------------------------------
+
+class ClassifierInfo(BaseModel):
+    name: str
+    version: str
+    file: str
+    sha256: str
+    classes: list[str]
+    source: str = Field(description="Where the weights come from: repository, commit and path")
+    trained_on: str = Field(description="Date of the commit that last changed the weights")
+
+
+class EmbeddingInfo(BaseModel):
+    model: str
+    dimension: int
+    normalize: bool
+
+
+class Evaluation(BaseModel):
+    accuracy: float
+    macro_f1: float
+    protocol: str
+
+
+class CategoryBaseline(BaseModel):
+    values: dict[str, float] = Field(description="Share of each predicted category")
+    source: str
+
+
+class ConfidenceBaseline(BaseModel):
+    bins: list[float] = Field(description="Bin edges; the last bin starts at the review threshold")
+    shares: list[float]
+    source: str
+
+
+class Baseline(BaseModel):
+    category_shares: CategoryBaseline
+    confidence: ConfidenceBaseline
+
+
+class Manifest(BaseModel):
+    classifier: ClassifierInfo
+    embedding: EmbeddingInfo
+    evaluation: Evaluation
+    review_threshold: float
+    baseline: Baseline

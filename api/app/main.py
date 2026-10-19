@@ -12,7 +12,7 @@ from .classifier import LoadedModel, load_model
 from .config import Settings
 from .embedder import EmbeddingClient, EmbeddingError
 from .monitoring import Monitor
-from .schemas import CategoryScore, Health, Prediction, PredictRequest, PredictResponse, Stats
+from .schemas import CategoryScore, Health, Manifest, Prediction, PredictRequest, PredictResponse, Stats
 from .store import PredictionLog
 
 
@@ -79,8 +79,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ))
         return PredictResponse(model_version=model.manifest["classifier"]["version"], predictions=predictions)
 
-    @app.get("/model", dependencies=[Depends(require_api_key)])
-    async def model_info(model: LoadedModel = Depends(get_model)) -> dict:
+    @app.get("/model", response_model=Manifest, dependencies=[Depends(require_api_key)])
+    async def model_info(model: LoadedModel = Depends(get_model)):
         """The manifest: classifier version, the embedding space it depends on, its evaluation."""
         return model.manifest
 

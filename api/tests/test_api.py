@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import httpx   # the embedding client's library: fake upstream responses must be httpx objects
 import pytest
@@ -158,3 +159,9 @@ def test_stats_survive_a_restart(settings, upstream):
     with TestClient(create_app(settings), headers={"X-API-Key": "test-key"}) as second:
         assert second.get("/stats").json() == before
         assert "predictions_total{" not in second.get("/metrics").text   # Prometheus counters do reset
+
+
+def test_committed_openapi_contract_is_up_to_date(settings):
+    """The web apps generate their types from openapi.json: it must match the code."""
+    committed = json.loads((Path(__file__).parent.parent / "openapi.json").read_text())
+    assert create_app(settings).openapi() == committed, "run scripts/export_openapi.py and commit openapi.json"

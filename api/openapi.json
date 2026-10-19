@@ -1,0 +1,683 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Endpoint classifier",
+    "description": "Classifies clinical trial endpoints into 9 categories.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/predict": {
+      "post": {
+        "summary": "Predict",
+        "operationId": "predict_predict_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredictRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/model": {
+      "get": {
+        "summary": "Model Info",
+        "description": "The manifest: classifier version, the embedding space it depends on, its evaluation.",
+        "operationId": "model_info_model_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Manifest"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/stats": {
+      "get": {
+        "summary": "Stats",
+        "description": "Recent predictions compared with the model's baseline: the signals of drift.",
+        "operationId": "stats_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stats"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Liveness only: doesn't call the embedding API, so it stays cheap for load balancers.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Baseline": {
+        "properties": {
+          "category_shares": {
+            "$ref": "#/components/schemas/CategoryBaseline"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/ConfidenceBaseline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_shares",
+          "confidence"
+        ],
+        "title": "Baseline"
+      },
+      "CategoryBaseline": {
+        "properties": {
+          "values": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Values",
+            "description": "Share of each predicted category"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "values",
+          "source"
+        ],
+        "title": "CategoryBaseline"
+      },
+      "CategoryScore": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "probability"
+        ],
+        "title": "CategoryScore"
+      },
+      "CategoryShare": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          },
+          "baseline": {
+            "type": "number",
+            "title": "Baseline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "share",
+          "baseline"
+        ],
+        "title": "CategoryShare"
+      },
+      "ClassifierInfo": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "classes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Classes"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Where the weights come from: repository, commit and path"
+          },
+          "trained_on": {
+            "type": "string",
+            "title": "Trained On",
+            "description": "Date of the commit that last changed the weights"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "file",
+          "sha256",
+          "classes",
+          "source",
+          "trained_on"
+        ],
+        "title": "ClassifierInfo"
+      },
+      "ConfidenceBaseline": {
+        "properties": {
+          "bins": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Bins",
+            "description": "Bin edges; the last bin starts at the review threshold"
+          },
+          "shares": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Shares"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bins",
+          "shares",
+          "source"
+        ],
+        "title": "ConfidenceBaseline"
+      },
+      "ConfidenceShare": {
+        "properties": {
+          "bin": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Bin"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          },
+          "baseline": {
+            "type": "number",
+            "title": "Baseline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bin",
+          "share",
+          "baseline"
+        ],
+        "title": "ConfidenceShare"
+      },
+      "Drift": {
+        "properties": {
+          "categories": {
+            "$ref": "#/components/schemas/DriftScore"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/DriftScore"
+          }
+        },
+        "type": "object",
+        "required": [
+          "categories",
+          "confidence"
+        ],
+        "title": "Drift"
+      },
+      "DriftScore": {
+        "properties": {
+          "psi": {
+            "type": "number",
+            "title": "Psi",
+            "description": "Population Stability Index against the baseline"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "stable",
+              "moderate",
+              "significant"
+            ],
+            "title": "Status",
+            "description": "< 0.1, 0.1 to 0.25, >= 0.25"
+          }
+        },
+        "type": "object",
+        "required": [
+          "psi",
+          "status"
+        ],
+        "title": "DriftScore"
+      },
+      "EmbeddingInfo": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "dimension": {
+            "type": "integer",
+            "title": "Dimension"
+          },
+          "normalize": {
+            "type": "boolean",
+            "title": "Normalize"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "dimension",
+          "normalize"
+        ],
+        "title": "EmbeddingInfo"
+      },
+      "Evaluation": {
+        "properties": {
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy"
+          },
+          "macro_f1": {
+            "type": "number",
+            "title": "Macro F1"
+          },
+          "protocol": {
+            "type": "string",
+            "title": "Protocol"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accuracy",
+          "macro_f1",
+          "protocol"
+        ],
+        "title": "Evaluation"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "model_version"
+        ],
+        "title": "Health"
+      },
+      "Manifest": {
+        "properties": {
+          "classifier": {
+            "$ref": "#/components/schemas/ClassifierInfo"
+          },
+          "embedding": {
+            "$ref": "#/components/schemas/EmbeddingInfo"
+          },
+          "evaluation": {
+            "$ref": "#/components/schemas/Evaluation"
+          },
+          "review_threshold": {
+            "type": "number",
+            "title": "Review Threshold"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/Baseline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "classifier",
+          "embedding",
+          "evaluation",
+          "review_threshold",
+          "baseline"
+        ],
+        "title": "Manifest"
+      },
+      "PredictRequest": {
+        "properties": {
+          "texts": {
+            "items": {
+              "type": "string",
+              "maxLength": 1000,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 256,
+            "minItems": 1,
+            "title": "Texts",
+            "examples": [
+              [
+                "Maximum plasma concentration (Cmax)",
+                "Number of participants"
+              ]
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "texts"
+        ],
+        "title": "PredictRequest"
+      },
+      "PredictResponse": {
+        "properties": {
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "predictions": {
+            "items": {
+              "$ref": "#/components/schemas/Prediction"
+            },
+            "type": "array",
+            "title": "Predictions",
+            "description": "One per input text, in the same order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_version",
+          "predictions"
+        ],
+        "title": "PredictResponse"
+      },
+      "Prediction": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence",
+            "description": "Probability of the predicted category"
+          },
+          "needs_review": {
+            "type": "boolean",
+            "title": "Needs Review",
+            "description": "Confidence below the model's review threshold"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryScore"
+            },
+            "type": "array",
+            "title": "Top",
+            "description": "The 3 most likely categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "confidence",
+          "needs_review",
+          "top"
+        ],
+        "title": "Prediction"
+      },
+      "Stats": {
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/Window"
+          },
+          "review_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Rate"
+          },
+          "baseline_review_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Review Rate"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryShare"
+            },
+            "type": "array",
+            "title": "Categories",
+            "default": []
+          },
+          "confidence": {
+            "items": {
+              "$ref": "#/components/schemas/ConfidenceShare"
+            },
+            "type": "array",
+            "title": "Confidence",
+            "default": []
+          },
+          "drift": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Drift"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null until the window holds enough predictions to compare"
+          }
+        },
+        "type": "object",
+        "required": [
+          "window",
+          "drift"
+        ],
+        "title": "Stats"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "Window": {
+        "properties": {
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since",
+            "description": "Unix time of the oldest prediction in the window"
+          }
+        },
+        "type": "object",
+        "required": [
+          "size",
+          "capacity",
+          "since"
+        ],
+        "title": "Window"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  }
+}

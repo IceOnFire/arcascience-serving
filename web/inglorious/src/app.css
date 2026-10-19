@@ -1,0 +1,80 @@
+body {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--iw-color-bg);
+  color: var(--iw-color-text);
+}
+
+#root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  padding-block: 1.5rem;
+}
+
+.app-tabs {
+  background: var(--iw-color-surface);
+  border-block-end: 1px solid var(--iw-color-border);
+  padding-inline: 1rem;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stat-card-value {
+  font-size: 2rem;
+  line-height: 1.4;
+}
+
+.confidence {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .iw-progress {
+    flex: 1;
+    min-width: 6rem;
+  }
+}
+
+/* The UI table never wraps its cells (min-width: max-content) and scrolls instead; here
+   the long alternatives column wraps, so the table fits the page like the React one */
+.results-table .iw-table {
+  min-width: 0;
+}
+
+.results-table .iw-chip {
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--iw-color-text-muted);
+}
+
+/* Charts scale to their card's width: the SVG has a viewBox */
+.iw-chart {
+  width: 100%;
+  height: auto;
+}
+
+/* Inglorious Charts 10.0.7 draws axis, grid and legend colours as fixed SVG attributes,
+   tuned for a light background. CSS takes precedence over SVG attributes, so these follow
+   the theme instead, in light and dark. */
+.iw-chart {
+  text {
+    fill: var(--iw-color-text-secondary);
+  }
+
+  line,
+  .iw-chart-grid line {
+    stroke: var(--iw-color-border);
+  }
+}

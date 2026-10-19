@@ -12,7 +12,7 @@ Putting a model in production raises three questions. Each part of this reposito
 2. **How do I know when it stops working?** A model doesn't fail loudly, so the API compares its live predictions with a baseline (`/stats`), and exposes metrics that [`prometheus/`](prometheus/README.md) collects and alerts on, and [`grafana/`](grafana/README.md) displays.
 3. **How do I see that happen?** [`demo/`](demo/README.md) has scenarios that make each signal move on purpose: drift, an embedding API outage, the API going down.
 
-The [web interface](web/README.md) classifies endpoints and shows the API's drift statistics live. It's built with React and Material UI, and will be built a second time with Inglorious Web, my own framework, to compare the two.
+The [web interface](web/README.md) classifies endpoints and shows the API's drift statistics live. It's built twice, with the same features: with React and Material UI, and with Inglorious Web, my own framework, to compare the two.
 
 ```
                       ┌───────────────────────── api/ ─────────────────────────┐
@@ -115,5 +115,5 @@ api/                the FastAPI service, its model, tests and scripts    → api
 prometheus/         scrape configuration and alert rules                 → prometheus/README.md
 grafana/            data source and dashboard, provisioned at startup    → grafana/README.md
 demo/               demo scenarios that move the monitoring signals      → demo/README.md
-web/                the web interface, in React (and later Inglorious)   → web/README.md
+web/                the web interface, in React and in Inglorious Web    → web/README.md
 ```

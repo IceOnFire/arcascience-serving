@@ -1,0 +1,44 @@
+{
+  "name": "endpoint-classifier-inglorious",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "The endpoint classifier web interface, built with Inglorious Web",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "preview": "vite preview",
+    "gen:api": "pnpm dlx --package=openapi-typescript@7.13.0 --package=typescript@5.9.3 openapi-typescript ../../api/openapi.json -o src/api/schema.d.ts"
+  },
+  "dependencies": {
+    "@inglorious/charts": "^10.0.7",
+    "@inglorious/store": "^11.0.4",
+    "@inglorious/ui": "^8.1.1",
+    "@inglorious/web": "^6.6.1"
+  },
+  "devDependencies": {
+    "@inglorious/eslint-config": "^1.1.2",
+    "@inglorious/vite-plugin-hmr": "^1.1.0",
+    "@types/node": "^22.20.5",
+    "eslint": "^10.13.0",
+    "jiti": "^2.7.0",
+    "prettier": "^3.9.10",
+    "rollup-plugin-minify-template-literals": "^2.2.0",
+    "sharp": "^0.35.5",
+    "svgo": "^4.1.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vite-plugin-image-optimizer": "^2.0.3",
+    "vitest": "^5.0.5"
+  },
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">= 22"
+  }
+}

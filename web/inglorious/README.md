@@ -58,7 +58,7 @@ The features are the same as in the React app; where the state lives is what dif
 
 ## Notes
 
-**Versions.** Inglorious web 6.7.0, store 11.1.0, ui 8.2.3, charts 11.1.2, eslint-config 1.1.4. TypeScript is set up as `create-app` does it: `typescript` is TypeScript 6, whose JavaScript API typescript-eslint needs, and `@typescript/native` is TypeScript 7, which `tsc` runs.
+**Versions.** Inglorious web 6.7.0, store 11.1.0, ui 8.2.4, charts 11.1.2, eslint-config 1.1.4. TypeScript is set up as `create-app` does it: `typescript` is TypeScript 6, whose JavaScript API typescript-eslint needs, and `@typescript/native` is TypeScript 7, which `tsc` runs.
 
 **Typed without casts.** The store checks each type against its entities, so `createStore` takes `types` as they are. Library entities extend their own interfaces (`AppRouterEntity extends RouterEntity`, `BarChartEntity extends ChartEntity`). The app's types use the `satisfies AppType<Entity>` shorthand ([`types/index.d.ts`](types/index.d.ts)) rather than a `type` alias listing every event, because `handleAsync` adds five events per request, which an alias would have to repeat.
 

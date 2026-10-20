@@ -19,7 +19,7 @@
   "dependencies": {
     "@inglorious/charts": "^11.1.2",
     "@inglorious/store": "^11.1.0",
-    "@inglorious/ui": "^8.2.3",
+    "@inglorious/ui": "^8.2.4",
     "@inglorious/web": "^6.7.0"
   },
   "devDependencies": {

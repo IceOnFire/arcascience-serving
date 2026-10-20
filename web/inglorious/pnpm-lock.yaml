@@ -15,8 +15,8 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0(@inglorious/utils@5.0.0)
       '@inglorious/ui':
-        specifier: ^8.2.3
-        version: 8.2.3(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))(@inglorious/utils@5.0.0)(@inglorious/web@6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0)))
+        specifier: ^8.2.4
+        version: 8.2.4(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))(@inglorious/utils@5.0.0)(@inglorious/web@6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0)))
       '@inglorious/web':
         specifier: ^6.7.0
         version: 6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))
@@ -318,8 +318,8 @@ packages:
     peerDependencies:
       '@inglorious/utils': 5.0.0
 
-  '@inglorious/ui@8.2.3':
-    resolution: {integrity: sha512-MP5mhNQMyUqJyFDRJcsSHi5LOzSMP3+sW6Hrww0tZvzvr5WgDg2FrO/X/A6IyroYF2koEKHd6hj36ctfWPPzdg==}
+  '@inglorious/ui@8.2.4':
+    resolution: {integrity: sha512-UaB7Sxpbg6TsoF9TijcuRLfCHAYLRJxdcjvv7sc3TFqLBi98ZAWjTlf4oOW51trth6CmV9LTArawlM4G+J+J8Q==}
     engines: {node: '>= 22'}
     peerDependencies:
       '@inglorious/store': 11.1.0
@@ -2236,7 +2236,7 @@ snapshots:
       '@inglorious/utils': 5.0.0
       mutative: 1.3.0
 
-  '@inglorious/ui@8.2.3(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))(@inglorious/utils@5.0.0)(@inglorious/web@6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0)))':
+  '@inglorious/ui@8.2.4(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))(@inglorious/utils@5.0.0)(@inglorious/web@6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0)))':
     dependencies:
       '@inglorious/store': 11.1.0(@inglorious/utils@5.0.0)
       '@inglorious/utils': 5.0.0

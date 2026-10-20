@@ -17,10 +17,10 @@
     "gen:api": "pnpm dlx --package=openapi-typescript@7.13.0 --package=typescript@5.9.3 openapi-typescript ../../api/openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {
-    "@inglorious/charts": "^11.1.2",
-    "@inglorious/store": "^11.1.0",
-    "@inglorious/ui": "^8.2.4",
-    "@inglorious/web": "^6.7.0"
+    "@inglorious/charts": "^11.1.3",
+    "@inglorious/store": "^11.2.0",
+    "@inglorious/ui": "^8.2.5",
+    "@inglorious/web": "^6.7.1"
   },
   "devDependencies": {
     "@inglorious/eslint-config": "^1.1.4",

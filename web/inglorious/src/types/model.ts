@@ -2,14 +2,14 @@ import { handleAsync } from "@inglorious/store/async"
 import { Chip } from "@inglorious/ui/chip"
 import { Tooltip } from "@inglorious/ui/tooltip"
 
-import type { AppApi, AppType, ModelEntity } from "../../types"
+import type { ModelEntity, ModelType } from "../../types"
 import { api as client, type Manifest } from "../api/client"
 import { formatPercent } from "../lib/stats"
 
 // The model version chip in the app bar. The manifest is loaded once, when the entity
 // is created; the pages work without it, so a failure only hides the chip.
-export const Model = {
-  create(entity: ModelEntity, _: unknown, api: AppApi) {
+export const Model: ModelType = {
+  create(entity, _, api) {
     api.notify(`#${entity.id}:load`)
   },
 
@@ -20,7 +20,7 @@ export const Model = {
     },
   }),
 
-  render(entity: ModelEntity) {
+  render(entity) {
     if (!entity.manifest) return null
     const { classifier, evaluation, review_threshold } = entity.manifest
     return Tooltip.render({
@@ -32,4 +32,4 @@ export const Model = {
       }),
     })
   },
-} satisfies AppType<ModelEntity>
+}

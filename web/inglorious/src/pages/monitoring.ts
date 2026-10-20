@@ -6,7 +6,7 @@ import { Grid } from "@inglorious/ui/grid"
 import { Typography } from "@inglorious/ui/typography"
 import { html } from "@inglorious/web"
 
-import type { AppApi, AppType, MonitoringEntity } from "../../types"
+import type { MonitoringEntity, MonitoringType } from "../../types"
 import { api as client, type Stats } from "../api/client"
 import * as SharesChart from "../components/shares-chart"
 import * as StatCard from "../components/stat-card"
@@ -22,14 +22,10 @@ const REFRESH_MS = 5000
 const MS_PER_SECOND = 1000
 const PSI_DIGITS = 2
 
-export const Monitoring = {
+export const Monitoring: MonitoringType = {
   // The router broadcasts every route change. Refresh while this page is shown, stop when
   // it isn't: the counterpart of the React page polling while it's mounted.
-  routeChange(
-    entity: MonitoringEntity,
-    { route }: { route?: string },
-    api: AppApi,
-  ) {
+  routeChange(entity, { route }, api) {
     const id = entity.id
     if (route === id && entity.timerId === undefined) {
       api.notify(`#${id}:load`)
@@ -56,7 +52,7 @@ export const Monitoring = {
     },
   }),
 
-  render(entity: MonitoringEntity, api: AppApi) {
+  render(entity, api) {
     const { stats, error, updatedAt } = entity
     if (!stats) {
       return error ? Alert.render({ severity: "error", children: error }) : null
@@ -124,7 +120,7 @@ export const Monitoring = {
       </div>
     `
   },
-} satisfies AppType<MonitoringEntity>
+}
 
 function renderDrift(
   title: string,

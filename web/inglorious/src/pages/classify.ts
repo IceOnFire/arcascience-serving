@@ -8,12 +8,7 @@ import { Textarea } from "@inglorious/ui/textarea"
 import { Typography } from "@inglorious/ui/typography"
 import { html } from "@inglorious/web"
 
-import type {
-  AppApi,
-  AppType,
-  ClassifyEntity,
-  PredictOutcome,
-} from "../../types"
+import type { ClassifyEntity, ClassifyType, PredictOutcome } from "../../types"
 import { api as client, MAX_TEXTS, type Prediction } from "../api/client"
 import { formatPercent, parseTexts } from "../lib/stats"
 
@@ -81,17 +76,17 @@ const ResultsTable = {
   },
 }
 
-export const Classify = {
-  create(entity: ClassifyEntity) {
+export const Classify: ClassifyType = {
+  create(entity) {
     entity.input = EXAMPLE
     entity.results = []
   },
 
-  inputChange(entity: ClassifyEntity, input: string) {
+  inputChange(entity, input) {
     entity.input = input
   },
 
-  submit(entity: ClassifyEntity, _: unknown, api: AppApi) {
+  submit(entity, _, api) {
     api.notify(`#${entity.id}:predict`, parseTexts(entity.input))
   },
 
@@ -119,7 +114,7 @@ export const Classify = {
     },
   }),
 
-  render(entity: ClassifyEntity, api: AppApi) {
+  render(entity, api) {
     const texts = parseTexts(entity.input)
     const isTooMany = texts.length > MAX_TEXTS
     const flagged = entity.results.filter(
@@ -170,4 +165,4 @@ export const Classify = {
       </div>
     `
   },
-} satisfies AppType<ClassifyEntity>
+}

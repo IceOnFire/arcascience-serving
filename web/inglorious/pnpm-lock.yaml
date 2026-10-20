@@ -9,17 +9,17 @@ importers:
   .:
     dependencies:
       '@inglorious/charts':
-        specifier: ^11.1.2
-        version: 11.1.2(@inglorious/web@6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0)))
+        specifier: ^11.1.3
+        version: 11.1.3(@inglorious/web@6.7.1(@inglorious/store@11.2.0(@inglorious/utils@5.0.0)))
       '@inglorious/store':
-        specifier: ^11.1.0
-        version: 11.1.0(@inglorious/utils@5.0.0)
+        specifier: ^11.2.0
+        version: 11.2.0(@inglorious/utils@5.0.0)
       '@inglorious/ui':
-        specifier: ^8.2.4
-        version: 8.2.4(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))(@inglorious/utils@5.0.0)(@inglorious/web@6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0)))
+        specifier: ^8.2.5
+        version: 8.2.5(@inglorious/store@11.2.0(@inglorious/utils@5.0.0))(@inglorious/utils@5.0.0)(@inglorious/web@6.7.1(@inglorious/store@11.2.0(@inglorious/utils@5.0.0)))
       '@inglorious/web':
-        specifier: ^6.7.0
-        version: 6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))
+        specifier: ^6.7.1
+        version: 6.7.1(@inglorious/store@11.2.0(@inglorious/utils@5.0.0))
     devDependencies:
       '@inglorious/eslint-config':
         specifier: ^1.1.4
@@ -292,11 +292,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@inglorious/charts@11.1.2':
-    resolution: {integrity: sha512-eMk4jM3/DF5H/NXNVyXrNSDdGYc9Z21tirGZDnQRIgh1KhLB0xUlH3+JhKrV6n/9avI02jCurzIPmcpXsfQNxg==}
+  '@inglorious/charts@11.1.3':
+    resolution: {integrity: sha512-HD/gsqBF5kreiuHTZWlkX9NVvLLLpHWWc/K4yO0cCAtzfOhJ4wgiIo/4aI1A4KDN2shtTH+KginJPR7s014R1w==}
     engines: {node: '>= 22'}
     peerDependencies:
-      '@inglorious/web': 6.7.0
+      '@inglorious/web': 6.7.1
 
   '@inglorious/eslint-config@1.1.4':
     resolution: {integrity: sha512-LdhJwoskXfSRNi+Pg++2lT+AqC06JUS+TbsIobl5wYq+Wu7PgAizo8bYAUSbM/BMygIR2AlhCOfsmkQ91DNM5Q==}
@@ -312,19 +312,19 @@ packages:
       eslint-plugin-tailwindcss:
         optional: true
 
-  '@inglorious/store@11.1.0':
-    resolution: {integrity: sha512-31q0q4SJd4yJy1foyKkp4mFr1k/t7Pyq5/nuhzyU0yIXNObV3CZh/IupHxV35brr6HlGysVu0pezk76XxR4cxw==}
+  '@inglorious/store@11.2.0':
+    resolution: {integrity: sha512-FxTWCXlWMb+e80ufM0XHrAdwIYzxsr8GcPWIoH0I+TNTRTtNXN44GRbk9uH/vv4vHAbBfYLzH4fNBJBywRXk1A==}
     engines: {node: '>= 22'}
     peerDependencies:
       '@inglorious/utils': 5.0.0
 
-  '@inglorious/ui@8.2.4':
-    resolution: {integrity: sha512-UaB7Sxpbg6TsoF9TijcuRLfCHAYLRJxdcjvv7sc3TFqLBi98ZAWjTlf4oOW51trth6CmV9LTArawlM4G+J+J8Q==}
+  '@inglorious/ui@8.2.5':
+    resolution: {integrity: sha512-txArzovYkSl/MHtdkggps7C1HpX0Tfaala8LMSZcdjqEHFUdWO9Oi/tO4JJNWENOCq8fIH3Ninlj0r7I+Q3zpA==}
     engines: {node: '>= 22'}
     peerDependencies:
-      '@inglorious/store': 11.1.0
+      '@inglorious/store': 11.2.0
       '@inglorious/utils': 5.0.0
-      '@inglorious/web': 6.7.0
+      '@inglorious/web': 6.7.1
 
   '@inglorious/utils@5.0.0':
     resolution: {integrity: sha512-DRGq988WvKeXH9eddIJTIVV+ahxJ1KlZGozU9xB9+6VLcIZ4y9xdeVTsZIRHcOORx8ZfcTLno8+rNE33E+BACg==}
@@ -336,11 +336,11 @@ packages:
     peerDependencies:
       vite: ^7.1.3 || ^8.0.0
 
-  '@inglorious/web@6.7.0':
-    resolution: {integrity: sha512-3/d5zoV9/LpgaIDNks0j30wpWQPwgqvWfgvyoh6G6PItsU3URD22vUnkQOOeDgqA0CtQzA3bULQJluoib8Z6Xg==}
+  '@inglorious/web@6.7.1':
+    resolution: {integrity: sha512-bVIBsHiXh1uM5vf9+a+MYAesvHsqDDkjaYM1ZevxEg321yzebJDgEYriC7V6sXf26I30LWWPQTfyDA49mTFU1A==}
     engines: {node: '>= 22'}
     peerDependencies:
-      '@inglorious/store': 11.1.0
+      '@inglorious/store': 11.2.0
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -2208,9 +2208,9 @@ snapshots:
   '@img/sharp-win32-x64@0.35.5':
     optional: true
 
-  '@inglorious/charts@11.1.2(@inglorious/web@6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0)))':
+  '@inglorious/charts@11.1.3(@inglorious/web@6.7.1(@inglorious/store@11.2.0(@inglorious/utils@5.0.0)))':
     dependencies:
-      '@inglorious/web': 6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))
+      '@inglorious/web': 6.7.1(@inglorious/store@11.2.0(@inglorious/utils@5.0.0))
       d3-array: 3.2.4
       d3-format: 3.1.2
       d3-scale: 4.0.2
@@ -2231,16 +2231,16 @@ snapshots:
     optionalDependencies:
       eslint-plugin-tailwindcss: 4.0.0-beta.0(tailwindcss@4.3.3)
 
-  '@inglorious/store@11.1.0(@inglorious/utils@5.0.0)':
+  '@inglorious/store@11.2.0(@inglorious/utils@5.0.0)':
     dependencies:
       '@inglorious/utils': 5.0.0
       mutative: 1.3.0
 
-  '@inglorious/ui@8.2.4(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))(@inglorious/utils@5.0.0)(@inglorious/web@6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0)))':
+  '@inglorious/ui@8.2.5(@inglorious/store@11.2.0(@inglorious/utils@5.0.0))(@inglorious/utils@5.0.0)(@inglorious/web@6.7.1(@inglorious/store@11.2.0(@inglorious/utils@5.0.0)))':
     dependencies:
-      '@inglorious/store': 11.1.0(@inglorious/utils@5.0.0)
+      '@inglorious/store': 11.2.0(@inglorious/utils@5.0.0)
       '@inglorious/utils': 5.0.0
-      '@inglorious/web': 6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))
+      '@inglorious/web': 6.7.1(@inglorious/store@11.2.0(@inglorious/utils@5.0.0))
 
   '@inglorious/utils@5.0.0': {}
 
@@ -2250,9 +2250,9 @@ snapshots:
       magic-string: 1.4.3
       vite: 8.3.4(@types/node@22.20.5)(jiti@2.7.0)(terser@5.51.2)
 
-  '@inglorious/web@6.7.0(@inglorious/store@11.1.0(@inglorious/utils@5.0.0))':
+  '@inglorious/web@6.7.1(@inglorious/store@11.2.0(@inglorious/utils@5.0.0))':
     dependencies:
-      '@inglorious/store': 11.1.0(@inglorious/utils@5.0.0)
+      '@inglorious/store': 11.2.0(@inglorious/utils@5.0.0)
       '@inglorious/utils': 5.0.0
       '@lit-labs/ssr-client': 1.1.8
       lit-html: 3.3.3

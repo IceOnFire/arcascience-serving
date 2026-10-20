@@ -2,7 +2,7 @@ import { handleAsync } from "@inglorious/store/async"
 import { Chip } from "@inglorious/ui/chip"
 import { Tooltip } from "@inglorious/ui/tooltip"
 
-import type { AppApi, ModelEntity } from "../../types"
+import type { AppApi, AppType, ModelEntity } from "../../types"
 import { api as client, type Manifest } from "../api/client"
 import { formatPercent } from "../lib/stats"
 
@@ -32,4 +32,4 @@ export const Model = {
       }),
     })
   },
-}
+} satisfies AppType<ModelEntity>

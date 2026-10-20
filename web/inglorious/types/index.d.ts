@@ -1,7 +1,8 @@
 import "./vite-end"
 
-import type { BaseEntity, EntitiesState } from "@inglorious/store"
-import type { Api, TemplateResult } from "@inglorious/web"
+import type { ChartEntity } from "@inglorious/charts"
+import type { BaseEntity, EntitiesState, EntityType } from "@inglorious/store"
+import type { Api } from "@inglorious/web"
 import type { RouterEntity } from "@inglorious/web/router"
 
 import type {
@@ -11,7 +12,7 @@ import type {
   Stats,
 } from "../src/api/client"
 
-export interface AppRouterEntity extends BaseEntity, Omit<RouterEntity, "id"> {
+export interface AppRouterEntity extends RouterEntity {
   type: "Router"
 }
 
@@ -48,7 +49,7 @@ export interface NotFoundEntity extends BaseEntity {
 }
 
 /** A chart's own state (its tooltip); the data comes with each render */
-export interface ChartEntity extends BaseEntity {
+export interface BarChartEntity extends ChartEntity {
   type: "Bar"
 }
 
@@ -58,7 +59,7 @@ export type AppEntity =
   | ClassifyEntity
   | MonitoringEntity
   | NotFoundEntity
-  | ChartEntity
+  | BarChartEntity
 
 export interface AppState extends EntitiesState<AppEntity> {
   router: AppRouterEntity
@@ -66,13 +67,17 @@ export interface AppState extends EntitiesState<AppEntity> {
   classify: ClassifyEntity
   monitoring: MonitoringEntity
   notFound: NotFoundEntity
-  categoryChart: ChartEntity
-  confidenceChart: ChartEntity
+  categoryChart: BarChartEntity
+  confidenceChart: BarChartEntity
 }
 
 export type AppApi = Api<AppEntity, AppState>
 
-export type Render<E> = (entity: E, api: AppApi) => TemplateResult | null
+// A type's handlers, checked against its entity and the app's api. The app's types use
+// this shorthand rather than a `type` alias listing each event: handleAsync adds five
+// events per request (predict, predictStart, predictRun, predictSuccess, ...), which an
+// alias would have to repeat.
+export type AppType<TEntity extends AppEntity> = EntityType<TEntity, AppApi>
 
 /** What the predict request resolves to: the texts sent, with their predictions */
 export interface PredictOutcome extends PredictResponse {

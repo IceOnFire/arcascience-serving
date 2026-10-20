@@ -1,5 +1,5 @@
 import { Chart } from "@inglorious/charts"
-import { createStore, type TypesConfig } from "@inglorious/store"
+import { createStore } from "@inglorious/store"
 import { Router, setRoutes } from "@inglorious/web/router"
 
 import type { AppEntity, AppState } from "../../types"
@@ -21,7 +21,7 @@ export const store = createStore<AppEntity, AppState>({
     Monitoring,
     NotFound,
     Bar: Chart,
-  } as unknown as TypesConfig<AppEntity>,
+  },
   entities,
   middlewares,
   // Creates an entity for each type that has none: router, model, classify, monitoring,

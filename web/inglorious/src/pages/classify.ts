@@ -8,7 +8,12 @@ import { Textarea } from "@inglorious/ui/textarea"
 import { Typography } from "@inglorious/ui/typography"
 import { html } from "@inglorious/web"
 
-import type { AppApi, ClassifyEntity, PredictOutcome } from "../../types"
+import type {
+  AppApi,
+  AppType,
+  ClassifyEntity,
+  PredictOutcome,
+} from "../../types"
 import { api as client, MAX_TEXTS, type Prediction } from "../api/client"
 import { formatPercent, parseTexts } from "../lib/stats"
 
@@ -40,11 +45,7 @@ const ResultsTable = {
     const p = row.prediction as Prediction
     switch (column.id) {
       case "category":
-        return cell(
-          // A grey pill, like MUI's default chip. The default chip's background is the
-          // material theme's white secondary background, invisible on the table
-          Chip.render({ children: p.category, color: "secondary", size: "sm" }),
-        )
+        return cell(Chip.render({ children: p.category, size: "sm" }))
       case "confidence":
         return cell(
           html`<div class="confidence">
@@ -143,7 +144,6 @@ export const Classify = {
           ${Button.render({
             type: "Button",
             children: "Classify",
-            color: "primary", // the runtime default is a neutral "default"
             isDisabled: entity.isLoading || texts.length === 0 || isTooMany,
             onClick: () => api.notify(`#${entity.id}:submit`),
           })}
@@ -170,4 +170,4 @@ export const Classify = {
       </div>
     `
   },
-}
+} satisfies AppType<ClassifyEntity>

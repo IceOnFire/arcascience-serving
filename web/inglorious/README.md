@@ -58,15 +58,12 @@ The features are the same as in the React app; where the state lives is what dif
 
 ## Notes
 
-**Versions.** Inglorious web 6.6.1, store 11.0.4, ui 8.2.0, charts 11.1.0, eslint-config 1.1.3. TypeScript is set up as `create-app` 1.3.0 does it: `typescript` is TypeScript 6, whose JavaScript API typescript-eslint needs, and `@typescript/native` is TypeScript 7, which `tsc` runs.
+**Versions.** Inglorious web 6.7.0, store 11.1.0, ui 8.2.3, charts 11.1.2, eslint-config 1.1.4. TypeScript is set up as `create-app` does it: `typescript` is TypeScript 6, whose JavaScript API typescript-eslint needs, and `@typescript/native` is TypeScript 7, which `tsc` runs.
 
-**Fixed upstream.** Building this app turned up issues in the Inglorious packages; the versions above fix them, and the app no longer works around them: the unpublished files of eslint-config 1.1.2, the missing chart type declarations, the Y axis without a tick formatter, the legend's own palette, chart colours fixed for a light background, linear `Progress` ignoring `color`, `Tooltip` requiring `onClick`, `Tabs` unable to select no tab, `Table` unable to wrap, and `create-app` without `--template` and `--syntax` flags.
+**Typed without casts.** The store checks each type against its entities, so `createStore` takes `types` as they are. Library entities extend their own interfaces (`AppRouterEntity extends RouterEntity`, `BarChartEntity extends ChartEntity`). The app's types use the `satisfies AppType<Entity>` shorthand ([`types/index.d.ts`](types/index.d.ts)) rather than a `type` alias listing every event, because `handleAsync` adds five events per request, which an alias would have to repeat.
 
-**Still open**, each commented in the code:
+**Fixed upstream.** Building this app turned up issues in the Inglorious packages, and the versions above fix all of them, so the app no longer works around any: the unpublished files of eslint-config 1.1.2, chart type declarations, a tick formatter on the Y axis, the legend's own palette, chart colours fixed for a light background, linear `Progress` ignoring `color`, `Tooltip` requiring `onClick`, `Tabs` unable to select no tab, `Table` unable to wrap or wrapping inside words, a default `Chip` invisible on white, `Button`'s neutral default in the material theme, `Chart.render` rejecting an app's own `Api`, `no-magic-numbers` left on in TypeScript tests, and `create-app` without `--template` and `--syntax` flags.
 
-- **`Chart.render` types its `api` as the default `Api<BaseEntity>`**, which an app's own `Api<AppEntity, AppState>` isn't assignable to. The call in [`shares-chart.ts`](src/components/shares-chart.ts) casts it.
-- **The shared ESLint config turns `no-magic-numbers` off for `*.test.js` only**, not for TypeScript tests. [`eslint.config.ts`](eslint.config.ts) extends it to `*.test.ts`, and to `src/lib/stats.ts`, which stays identical to the React app's copy. It also ignores 0 and 1, which here are counts, indexes and decimal places.
-- **A default `Chip` is invisible on white**: in the material light theme, its background is the theme's white secondary background, the same as cards and tables. The category chips use `color: "secondary"`, a grey pill like Material UI's default chip.
-- **`Button`'s runtime default `color` is a neutral `"default"`**, so the Classify button sets `color: "primary"`.
-- **`pnpm install` warns about peer dependencies**: `eslint-plugin-react` and `eslint-plugin-react-hooks`, which the shared ESLint config requires, don't declare support for ESLint 10 yet. Linting works.
-- **With `isWrapping`, `Table` wraps every cell**, percentages included; [`app.css`](src/app.css) keeps chips and percentages on one line.
+**Still open**: `pnpm install` warns that `eslint-plugin-react`, which the shared ESLint config requires, doesn't declare support for ESLint 10 yet. Linting works.
+
+[`eslint.config.ts`](eslint.config.ts) turns `no-magic-numbers` off for `src/lib/stats.ts`, which stays identical to the React app's copy, and ignores 0 and 1 elsewhere: here they are counts, indexes and decimal places.

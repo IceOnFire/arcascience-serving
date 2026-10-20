@@ -49,8 +49,6 @@ export function render(
         Legend(),
       ],
     },
-    // @inglorious/charts 11.1.0 types `api` as the default Api<BaseEntity>, which an app's
-    // own Api<AppEntity, AppState> isn't assignable to
-    api as Parameters<typeof Chart.render>[1],
+    api,
   )
 }

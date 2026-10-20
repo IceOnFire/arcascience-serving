@@ -6,7 +6,7 @@ import { Grid } from "@inglorious/ui/grid"
 import { Typography } from "@inglorious/ui/typography"
 import { html } from "@inglorious/web"
 
-import type { AppApi, MonitoringEntity } from "../../types"
+import type { AppApi, AppType, MonitoringEntity } from "../../types"
 import { api as client, type Stats } from "../api/client"
 import * as SharesChart from "../components/shares-chart"
 import * as StatCard from "../components/stat-card"
@@ -124,7 +124,7 @@ export const Monitoring = {
       </div>
     `
   },
-}
+} satisfies AppType<MonitoringEntity>
 
 function renderDrift(
   title: string,

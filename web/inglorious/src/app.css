@@ -45,12 +45,6 @@ main {
   }
 }
 
-/* Keep chips such as "Needs review", and percentages, on one line when the table wraps */
-.iw-table .iw-chip,
-.confidence span {
-  white-space: nowrap;
-}
-
 .muted {
   color: var(--iw-color-text-muted);
 }
